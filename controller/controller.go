@@ -110,12 +110,29 @@ func (c *Controller) RollDice(sc service.ServiceInterface,
 	repo repository.RepositoryInterface) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
+		input := service.RollDiceInput{UserId: ctx.Param("user_id")}
+
+		err := sc.RollDice(ctx, input, repo)
+		if err != nil {
+			response.FormatResponse(ctx, http.StatusInternalServerError, "Internal Server Error", nil)
+			return
+		}
+		response.FormatResponse(ctx, http.StatusOK, "OK", nil)
 	}
 }
 
 func (c *Controller) EndGameSession(sc service.ServiceInterface,
 	repo repository.RepositoryInterface) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
+
+		input := service.EndGameSessionInput{UserId: ctx.Param("user_id")}
+
+		err := sc.EndGameSession(ctx, input, repo)
+		if err != nil {
+			response.FormatResponse(ctx, http.StatusInternalServerError, "Internal Server Error", nil)
+			return
+		}
+		response.FormatResponse(ctx, http.StatusOK, "OK", nil)
 
 	}
 }

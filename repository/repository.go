@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/tejiriaustin/apex-network/database"
 	"github.com/tejiriaustin/apex-network/env"
-	"github.com/tejiriaustin/apex-network/models"
+	"gorm.io/gorm"
 )
 
 type (
@@ -23,8 +23,22 @@ func NewRepo(env env.Env, db *database.Client) RepositoryInterface {
 
 var _ RepositoryInterface = (*Repository)(nil)
 
-func (u *Repository) CreateUser(ctx context.Context,
-	user models.User,
-) (*models.User, error) {
-	return nil, nil
+func (r *Repository) WithContext(ctx context.Context) *gorm.DB {
+	return r.DB.WithContext(ctx)
+}
+
+func (r *Repository) Find(dest interface{}, conds ...interface{}) *gorm.DB {
+	return r.DB.Find(dest, conds)
+}
+
+func (r *Repository) Create(value interface{}) *gorm.DB {
+	return r.DB.Create(value)
+}
+
+func (r *Repository) Delete(dest interface{}, conds ...interface{}) *gorm.DB {
+	return r.DB.Delete(dest, conds)
+}
+
+func (r *Repository) Update(column string, value interface{}) *gorm.DB {
+	return r.DB.Update(column, value)
 }

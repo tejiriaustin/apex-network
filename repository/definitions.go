@@ -2,11 +2,13 @@ package repository
 
 import (
 	"context"
-	"github.com/tejiriaustin/apex-network/models"
+	"gorm.io/gorm"
 )
 
 type RepositoryInterface interface {
-	CreateUser(ctx context.Context,
-		user models.User,
-	) (*models.User, error)
+	WithContext(ctx context.Context) *gorm.DB
+	Find(dest interface{}, conds ...interface{}) *gorm.DB
+	Create(value interface{}) *gorm.DB
+	Delete(dest interface{}, conds ...interface{}) *gorm.DB
+	Update(column string, value interface{}) *gorm.DB
 }

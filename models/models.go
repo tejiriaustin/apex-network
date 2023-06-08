@@ -21,6 +21,11 @@ const (
 	WinRoll    TransactionDescription = "win-roll"
 )
 
+const (
+	FieldUserBalance   = "balance"
+	FieldUserIsPlaying = "is_playing"
+)
+
 type (
 	Shared struct {
 		ID        uuid.UUID `json:"id"`
@@ -55,4 +60,19 @@ func (s Shared) Init() {
 	id := uuid.New()
 	s.ID = id
 	s.CreatedAt = time.Now().UTC()
+}
+
+func (u User) GetFullName() string {
+	return u.FirstName + " " + u.LastName
+}
+
+func (User) TableName() string {
+	return "users"
+}
+
+func (Game) TableName() string {
+	return "game"
+}
+func (WalletTransaction) TableName() string {
+	return "wallet_transaction"
 }
