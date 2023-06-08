@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "github.com/tejiriaustin/apex-network/cmd"
 
+func main() {
+	cmd.Execute()
 }
