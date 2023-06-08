@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"context"
-	"github.com/tejiriaustin/apex-network/server"
 
 	"github.com/spf13/cobra"
 
 	"github.com/tejiriaustin/apex-network/database"
 	"github.com/tejiriaustin/apex-network/env"
 	"github.com/tejiriaustin/apex-network/repository"
+	"github.com/tejiriaustin/apex-network/server"
 	"github.com/tejiriaustin/apex-network/service"
 )
 

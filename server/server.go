@@ -2,14 +2,16 @@ package server
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/tejiriaustin/apex-network/controller"
-	"github.com/tejiriaustin/apex-network/repository"
-	"github.com/tejiriaustin/apex-network/service"
 	"log"
 	"os"
 	"os/signal"
 	"time"
+
+	"github.com/gin-gonic/gin"
+
+	"github.com/tejiriaustin/apex-network/controller"
+	"github.com/tejiriaustin/apex-network/repository"
+	"github.com/tejiriaustin/apex-network/service"
 )
 
 func Start(ctx context.Context,

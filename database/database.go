@@ -2,9 +2,11 @@ package database
 
 import (
 	"fmt"
-	"github.com/tejiriaustin/apex-network/env"
-	"gorm.io/gorm"
 	"log"
+
+	"gorm.io/gorm"
+
+	"github.com/tejiriaustin/apex-network/env"
 )
 
 type Client struct {
