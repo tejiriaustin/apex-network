@@ -1,7 +1,6 @@
 package env
 
 import (
-	"errors"
 	"os"
 )
 
@@ -25,17 +24,17 @@ func (e Env) SetEnv(key string, value interface{}) Env {
 	return e
 }
 
-func (e Env) GetEnvString(serviceName string) (string, error) {
+func (e Env) GetEnvString(serviceName string) string {
 	value := e[serviceName]
 	if value == nil {
-		return "", errors.New("failed to get service env")
+		return ""
 	}
 
 	valueString, ok := value.(string)
 	if !ok {
-		return "", errors.New("failed to convert env to string")
+		return ""
 	}
-	return valueString, nil
+	return valueString
 }
 
 func GetEnv(key string) string {

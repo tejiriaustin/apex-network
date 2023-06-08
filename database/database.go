@@ -15,7 +15,14 @@ type Client struct {
 
 func OpenDatabaseConnection(config env.Env) *Client {
 
-	_ = fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=%v")
+	_ = fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=%v",
+		config.GetEnvString(env.DbHost),
+		config.GetEnvString(env.DbUsername),
+		config.GetEnvString(env.DbPassword),
+		config.GetEnvString(env.DbDatabase),
+		"12345",
+		config.GetEnvString(env.DbTimeZone),
+	)
 
 	db, err := gorm.Open(nil, &gorm.Config{})
 	if err != nil {

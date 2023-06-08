@@ -1,23 +1,22 @@
 package response
 
+import "github.com/gin-gonic/gin"
+
 type Response struct {
 	Message string      `json:"message"`
 	Body    interface{} `json:"body"`
 }
 
-func FormatResponse(statusCode int, message string, body interface{}) Response {
-	return format(statusCode, message, body)
+func FormatResponse(c *gin.Context, statusCode int, message string, body interface{}) {
+	format(c, statusCode, message, body)
 }
 
-func format(statusCode int, message string, body interface{}) Response {
-	if statusCode == 200 {
-		return Response{
-			Message: message,
-			Body:    body,
-		}
+func format(c *gin.Context, statusCode int, message string, body interface{}) {
+	var resp Response
+	resp.Message = message
+	if body != nil {
+		resp.Body = body
 	}
-	if body == nil {
-		return Response{Message: message}
-	}
-	return Response{Message: message, Body: body}
+
+	c.JSON(statusCode, resp)
 }

@@ -15,9 +15,10 @@ import (
 )
 
 func Start(ctx context.Context,
-	service service.IService,
-	repo repository.IRepository) {
+	service service.ServiceInterface,
+	repo repository.RepositoryInterface) {
 	router := gin.New()
+	log.Println("starting server...")
 
 	controller.Routes(ctx, router, service, repo)
 
