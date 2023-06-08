@@ -9,7 +9,7 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "apex-network",
+	Use:   "apex_network_api",
 	Short: "",
 }
 
