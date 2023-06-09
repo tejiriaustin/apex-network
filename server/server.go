@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"github.com/tejiriaustin/apex-network/middleware"
 	"log"
 	"os"
 	"os/signal"
@@ -18,6 +19,8 @@ func Start(ctx context.Context,
 	service service.ServiceInterface,
 	repo *repository.RepositoryContainer) {
 	router := gin.New()
+
+	router.Use(middleware.DefaultStructuredLogs())
 
 	log.Println("starting server...")
 
