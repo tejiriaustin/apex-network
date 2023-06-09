@@ -49,7 +49,7 @@ func structuredLogs(logger *zap.Logger) gin.HandlerFunc {
 				zap.String("method", param.Latency.String()),
 			)
 		} else {
-			logger.Info(c.Request.Response.Status,
+			logger.Info("message",
 				zap.String("method", param.Method),
 				zap.Int("status_code", param.StatusCode),
 				zap.Int("body_size", param.BodySize),
