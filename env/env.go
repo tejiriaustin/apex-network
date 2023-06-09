@@ -1,21 +1,29 @@
 package env
 
 import (
+	"github.com/joho/godotenv"
 	"os"
 )
 
 const (
-	DbUsername = "db_user_name"
-	DbHost     = "db_host"
-	DbPassword = "db_password"
-	DbDatabase = "db_database"
-	DbTimeZone = "db_time_zone"
+	DbUsername = "DB_USERNAME"
+	DbHost     = "DB_HOST"
+	DbPassword = "DB_PASSWORD"
+	DbDatabase = "DB_DATABASE"
+	DbTimeZone = "DB_TIMEZONE"
+	DbUrl      = "DB_URL"
 )
 
 type Env map[string]interface{}
 
 func NewEnv() Env {
 	return Env{}
+}
+func init() {
+	err := godotenv.Load(".env")
+	if err != nil {
+		panic("failed to load ")
+	}
 }
 
 func (e Env) SetEnv(key string, value interface{}) Env {
@@ -46,8 +54,8 @@ func GetEnv(key string) string {
 }
 
 func MustGetEnv(key string) string {
-	value := os.Getenv(key)
-	if value == "" {
+	value, ok := os.LookupEnv(key)
+	if !ok {
 		panic("failed to get service env: " + key)
 	}
 	return value

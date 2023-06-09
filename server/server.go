@@ -16,8 +16,9 @@ import (
 
 func Start(ctx context.Context,
 	service service.ServiceInterface,
-	repo repository.RepositoryInterface) {
+	repo *repository.RepositoryContainer) {
 	router := gin.New()
+
 	log.Println("starting server...")
 
 	controller.Routes(ctx, router, service, repo)

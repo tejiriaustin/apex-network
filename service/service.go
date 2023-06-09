@@ -6,6 +6,8 @@ import (
 	"github.com/tejiriaustin/apex-network/env"
 	"github.com/tejiriaustin/apex-network/models"
 	"github.com/tejiriaustin/apex-network/repository"
+	"math/rand"
+	"time"
 )
 
 type (
@@ -51,10 +53,10 @@ type (
 
 func (u *Service) CreateUser(ctx context.Context,
 	input CreateUserInput,
-	repo repository.UserRepositoryInterface,
-) (*models.User, error) {
+	repo repository.PlayerRepositoryInterface,
+) (*models.Player, error) {
 
-	user := models.User{
+	user := models.Player{
 		FirstName:     input.FirstName,
 		LastName:      input.LastName,
 		IsPlaying:     false,
@@ -68,12 +70,18 @@ func (u *Service) CreateUser(ctx context.Context,
 
 func (u *Service) FundWallet(ctx context.Context,
 	input FundWalletInput,
-	repo repository.UserRepositoryInterface) (int, error) {
+	repo repository.PlayerRepositoryInterface) (int, error) {
 	filter := repository.NewQueryFilter()
 
 	filter.AddFilter("id", input.UserId)
 
-	user, err := repo.UpdateUser(ctx, filter, models.FieldUserBalance, defaultFundWalletAmount)
+	user, err := repo.GetUser(ctx, filter)
+	if err != nil {
+		return 0, err
+	}
+	user.WalletBalance += defaultFundWalletAmount
+
+	user, err = repo.UpdateUser(ctx, filter, user)
 	if err != nil {
 		return 0, err
 	}
@@ -83,7 +91,7 @@ func (u *Service) FundWallet(ctx context.Context,
 
 func (u *Service) GetWalletBalance(ctx context.Context,
 	input GetWalletBalanceInput,
-	repo repository.UserRepositoryInterface) (int, error) {
+	repo repository.PlayerRepositoryInterface) (int, error) {
 
 	filter := repository.NewQueryFilter()
 
@@ -98,7 +106,7 @@ func (u *Service) GetWalletBalance(ctx context.Context,
 
 func (u *Service) StartGameSession(ctx context.Context,
 	input StartGameSessionInput,
-	repo repository.UserRepositoryInterface,
+	repo repository.PlayerRepositoryInterface,
 ) error {
 
 	filter := repository.NewQueryFilter()
@@ -114,7 +122,10 @@ func (u *Service) StartGameSession(ctx context.Context,
 		return errors.New("can only start a game when no game is in session")
 	}
 
-	_, err = repo.UpdateUser(ctx, filter, models.FieldUserIsPlaying, true)
+	user.TargetNumber = genRandomNumber()
+	user.IsPlaying = true
+
+	_, err = repo.UpdateUser(ctx, filter, user)
 	if err != nil {
 		return err
 	}
@@ -124,7 +135,7 @@ func (u *Service) StartGameSession(ctx context.Context,
 
 func (u *Service) EndGameSession(ctx context.Context,
 	input EndGameSessionInput,
-	repo repository.UserRepositoryInterface,
+	repo repository.PlayerRepositoryInterface,
 ) error {
 
 	filter := repository.NewQueryFilter()
@@ -140,7 +151,8 @@ func (u *Service) EndGameSession(ctx context.Context,
 		return errors.New("can only end a game if an active game is in session")
 	}
 
-	_, err = repo.UpdateUser(ctx, filter, models.FieldUserIsPlaying, false)
+	user.IsPlaying = false
+	_, err = repo.UpdateUser(ctx, filter, user)
 	if err != nil {
 		return err
 	}
@@ -150,7 +162,70 @@ func (u *Service) EndGameSession(ctx context.Context,
 
 func (u *Service) RollDice(ctx context.Context,
 	input RollDiceInput,
-	repo repository.RepositoryInterface,
+	userRepo repository.PlayerRepositoryInterface,
+	walletRepo repository.WalletRepositoryInterface,
 ) error {
+
+	filter := repository.NewQueryFilter()
+
+	filter.AddFilter("id", input.UserId)
+
+	user, err := userRepo.GetUser(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	if user.IsPlaying == false {
+		return errors.New("please start a new session before rolling a dice")
+	}
+
+	if user.HasRolledFirstDie == true {
+		// Roll die again but don't get debited
+		user.DiceSum += genRandomNumber()
+
+		if user.DiceSum == user.TargetNumber {
+			tx := models.WalletTransaction{
+				Amount:          10,
+				Description:     models.RollCost,
+				TransactionType: models.Credit,
+			}
+			_, err = walletRepo.CreateTransaction(ctx, &tx)
+			if err != nil {
+				return err
+			}
+		}
+		//update hasRolled status to false
+		user.HasRolledFirstDie = false
+		_, err = userRepo.UpdateUser(ctx, filter, user)
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	tx := models.WalletTransaction{
+		Amount:          5,
+		Description:     models.RollCost,
+		TransactionType: models.Debit,
+	}
+	tx.Init()
+
+	_, err = walletRepo.CreateTransaction(ctx, &tx)
+	if err != nil {
+		return err
+	}
+
+	user.DiceSum = genRandomNumber()
+	_, err = userRepo.UpdateUser(ctx, filter, user)
+	if err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func genRandomNumber() int {
+	rand.Seed(time.Now().Unix())
+	number := rand.Intn(10) + 2
+	return number
 }

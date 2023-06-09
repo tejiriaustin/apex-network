@@ -10,10 +10,10 @@ func NewQueryFilter() QueryFilter {
 
 func (q QueryFilter) AddFilter(filter string, value string) QueryFilter {
 	if q.filter == "" {
-		q.filter = filter + "=" + value
+		q.filter = filter + " = " + value
 		return q
 	}
-	q.filter = q.filter + " AND " + filter + "=" + value
+	q.filter = q.filter + " AND " + filter + " = " + value
 	return q
 }
 

@@ -18,7 +18,7 @@ func NewController() *Controller {
 }
 
 func (c *Controller) FundWallet(sc service.ServiceInterface,
-	repo repository.RepositoryInterface,
+	repo repository.PlayerRepositoryInterface,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
@@ -42,7 +42,8 @@ func (c *Controller) FundWallet(sc service.ServiceInterface,
 }
 
 func (c *Controller) CreateUser(sc service.ServiceInterface,
-	repo repository.RepositoryInterface) gin.HandlerFunc {
+	repo repository.PlayerRepositoryInterface,
+) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var req requests.CreateUserRequest
 		err := ctx.ShouldBindJSON(&req)
@@ -67,7 +68,8 @@ func (c *Controller) CreateUser(sc service.ServiceInterface,
 }
 
 func (c *Controller) GetWalletBalance(sc service.ServiceInterface,
-	repo repository.RepositoryInterface) gin.HandlerFunc {
+	repo repository.PlayerRepositoryInterface,
+) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		input := service.GetWalletBalanceInput{
@@ -92,7 +94,8 @@ func (c *Controller) GetWalletBalance(sc service.ServiceInterface,
 }
 
 func (c *Controller) StartGameSession(sc service.ServiceInterface,
-	repo repository.RepositoryInterface) gin.HandlerFunc {
+	repo repository.PlayerRepositoryInterface,
+) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		input := service.StartGameSessionInput{UserId: ctx.Param("user_id")}
@@ -107,12 +110,14 @@ func (c *Controller) StartGameSession(sc service.ServiceInterface,
 }
 
 func (c *Controller) RollDice(sc service.ServiceInterface,
-	repo repository.RepositoryInterface) gin.HandlerFunc {
+	userRepo repository.PlayerRepositoryInterface,
+	walletRepo repository.WalletRepositoryInterface,
+) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		input := service.RollDiceInput{UserId: ctx.Param("user_id")}
 
-		err := sc.RollDice(ctx, input, repo)
+		err := sc.RollDice(ctx, input, userRepo, walletRepo)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusInternalServerError, "Internal Server Error", nil)
 			return
@@ -122,7 +127,8 @@ func (c *Controller) RollDice(sc service.ServiceInterface,
 }
 
 func (c *Controller) EndGameSession(sc service.ServiceInterface,
-	repo repository.RepositoryInterface) gin.HandlerFunc {
+	repo repository.PlayerRepositoryInterface,
+) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		input := service.EndGameSessionInput{UserId: ctx.Param("user_id")}

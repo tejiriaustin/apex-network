@@ -11,28 +11,29 @@ type (
 	ServiceInterface interface {
 		CreateUser(ctx context.Context,
 			input CreateUserInput,
-			repo repository.UserRepositoryInterface,
-		) (*models.User, error)
+			repo repository.PlayerRepositoryInterface,
+		) (*models.Player, error)
 
 		FundWallet(ctx context.Context,
 			input FundWalletInput,
-			repo repository.UserRepositoryInterface) (int, error)
+			repo repository.PlayerRepositoryInterface) (int, error)
 
 		GetWalletBalance(ctx context.Context,
 			input GetWalletBalanceInput,
-			repo repository.UserRepositoryInterface) (int, error)
+			repo repository.PlayerRepositoryInterface) (int, error)
 
 		StartGameSession(ctx context.Context,
 			input StartGameSessionInput,
-			repo repository.UserRepositoryInterface,
+			repo repository.PlayerRepositoryInterface,
 		) error
 		EndGameSession(ctx context.Context,
 			input EndGameSessionInput,
-			repo repository.UserRepositoryInterface,
+			repo repository.PlayerRepositoryInterface,
 		) error
 		RollDice(ctx context.Context,
 			input RollDiceInput,
-			repo repository.RepositoryInterface,
+			userRepo repository.PlayerRepositoryInterface,
+			walletRepo repository.WalletRepositoryInterface,
 		) error
 	}
 )

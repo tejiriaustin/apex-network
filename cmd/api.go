@@ -30,7 +30,7 @@ func startApiServer(cmd *cobra.Command, args []string) {
 
 	dbConn := database.OpenDatabaseConnection(config)
 
-	rc := repository.NewRepo(config, dbConn)
+	rc := repository.NewRepositoryContainer(config, dbConn)
 
 	sc := service.NewService(config)
 
@@ -42,11 +42,7 @@ func SetEnvironmentConfigs() env.Env {
 
 	config.SetEnv("servie_name", "apex-network-api").
 		SetEnv("PORT", "8080").
-		SetEnv(env.DbUsername, env.MustGetEnv(env.DbUsername)).
-		SetEnv(env.DbHost, env.MustGetEnv(env.DbHost)).
-		SetEnv(env.DbPassword, env.MustGetEnv(env.DbPassword)).
-		SetEnv(env.DbTimeZone, env.MustGetEnv(env.DbTimeZone)).
-		SetEnv(env.DbDatabase, env.MustGetEnv(env.DbDatabase))
+		SetEnv(env.DbUrl, env.MustGetEnv(env.DbUrl))
 
 	return config
 }

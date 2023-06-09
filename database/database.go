@@ -2,6 +2,8 @@ package database
 
 import (
 	"fmt"
+	"github.com/tejiriaustin/apex-network/models"
+	"gorm.io/driver/postgres"
 	"log"
 
 	"gorm.io/gorm"
@@ -15,18 +17,16 @@ type Client struct {
 
 func OpenDatabaseConnection(config env.Env) *Client {
 
-	_ = fmt.Sprintf("host=%v user=%v password=%v dbname=%v port=%v sslmode=disable TimeZone=%v",
-		config.GetEnvString(env.DbHost),
-		config.GetEnvString(env.DbUsername),
-		config.GetEnvString(env.DbPassword),
-		config.GetEnvString(env.DbDatabase),
-		"12345",
-		config.GetEnvString(env.DbTimeZone),
-	)
+	dsn := fmt.Sprintf(config.GetEnvString(env.DbUrl))
 
-	db, err := gorm.Open(nil, &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Panicf("faile to connect to database: %v", err)
+		log.Panicf("failed to connect to database: %v", err)
+	}
+
+	err = db.AutoMigrate(&models.Game{}, &models.WalletTransaction{}, models.Player{})
+	if err != nil {
+		log.Panicf("failed to run auto migrate: %v", err)
 	}
 	return &Client{db}
 }

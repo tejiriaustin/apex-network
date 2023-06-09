@@ -17,13 +17,15 @@ const (
 const (
 	FundWallet TransactionDescription = "fund-wallet"
 	StartGame  TransactionDescription = "start-game"
-	LoseRoll   TransactionDescription = "lose-roll"
+	RollCost   TransactionDescription = "lose-roll"
 	WinRoll    TransactionDescription = "win-roll"
 )
 
 const (
-	FieldUserBalance   = "balance"
-	FieldUserIsPlaying = "is_playing"
+	FieldUserBalance            = "balance"
+	FieldUserIsPlaying          = "is_playing"
+	FieldUserTargetNumber       = "target_number"
+	FieldUserHasRolledFirstDice = "has_rolled_first_dice"
 )
 
 type (
@@ -33,26 +35,25 @@ type (
 		UpdatedAt time.Time `json:"updated_at"`
 		DeletedAt time.Time `json:"deleted_at"`
 	}
-	User struct {
+	Player struct {
 		Shared
-		FirstName     string `json:"first_name"`
-		LastName      string `json:"last_name"`
-		FullName      string `json:"full_name"`
-		IsPlaying     bool   `json:"is_playing"`
-		WalletBalance int    `json:"wallet_balance"`
+		FirstName         string `json:"first_name"`
+		LastName          string `json:"last_name"`
+		FullName          string `json:"full_name"`
+		IsPlaying         bool   `json:"is_playing"`
+		WalletBalance     int    `json:"wallet_balance"`
+		TargetNumber      int    `json:"target_number"`
+		DiceSum           int    `json:"dice_sum"`
+		HasRolledFirstDie bool   `json:"has_rolled"`
 	}
 	Game struct {
 		Shared
-		UserId         string `json:"user_id"`
-		TargetNumber   int    `json:"target_number"`
-		FirstDiceRoll  int    `json:"first_dice_roll"`
-		SecondDiceRoll int    `json:"second_dice_roll"`
-		IsComplete     bool   `json:"is_complete"`
 	}
 	WalletTransaction struct {
 		Shared
-		Description     string `json:"description"`
-		TransactionType string `json:"transaction_type"`
+		Amount          int                    `json:"amount"`
+		Description     TransactionDescription `json:"description"`
+		TransactionType TransactionType        `json:"transaction_type"`
 	}
 )
 
@@ -62,17 +63,14 @@ func (s Shared) Init() {
 	s.CreatedAt = time.Now().UTC()
 }
 
-func (u User) GetFullName() string {
+func (u Player) GetFullName() string {
 	return u.FirstName + " " + u.LastName
 }
 
-func (User) TableName() string {
+func (Player) TableName() string {
 	return "users"
 }
 
-func (Game) TableName() string {
-	return "game"
-}
 func (WalletTransaction) TableName() string {
 	return "wallet_transaction"
 }
