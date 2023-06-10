@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"github.com/tejiriaustin/apex-network/database"
 	"github.com/tejiriaustin/apex-network/env"
 	"github.com/tejiriaustin/apex-network/models"
@@ -39,31 +38,29 @@ func (u *PlayerRepository) CreatePlayer(ctx context.Context, Player models.Playe
 }
 
 func (u *PlayerRepository) UpdatePlayer(ctx context.Context, playerID string, player models.Player) (*models.Player, error) {
-	var Player models.Player
 
 	if err := u.db.WithContext(ctx).
-		Table(Player.TableName()).
+		Table(player.TableName()).
 		Where("id = ?", playerID).
 		Updates(&player).
-		Find(&Player, "id = ?", playerID).
+		Find(&player, "id = ?", playerID).
 		Error; err != nil {
 
 		return nil, err
 	}
 
-	return &Player, nil
+	return &player, nil
 }
 
 func (u *PlayerRepository) GetPlayerbyID(ctx context.Context, playerID string) (*models.Player, error) {
-	var Player models.Player
+	var player models.Player
 
 	if err := u.db.WithContext(ctx).
-		Table(Player.TableName()).
-		First(&Player, "id = ?", playerID).
+		Table(player.TableName()).
+		First(&player, "id = ?", playerID).
 		Error; err != nil {
-		fmt.Println("asretdyfugi")
 		return nil, err
 	}
 
-	return &Player, nil
+	return &player, nil
 }

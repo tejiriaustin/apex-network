@@ -56,6 +56,9 @@ type (
 	GameIsInitializedInput struct {
 		PlayerId string
 	}
+	GetTransactionLogsInput struct {
+		PlayerId string
+	}
 )
 
 func (u *Service) CreatePlayer(ctx context.Context,
@@ -249,4 +252,16 @@ func (u *Service) GameIsInitialized(ctx context.Context,
 		return nil, err
 	}
 	return player, nil
+}
+
+func (u *Service) GetWalletTransactions(ctx context.Context,
+	input GetTransactionLogsInput,
+	walletRepo repository.WalletRepositoryInterface,
+) ([]*models.WalletTransaction, error) {
+
+	transactions, err := walletRepo.GetWalletTransactions(ctx, input.PlayerId)
+	if err != nil {
+		return nil, err
+	}
+	return transactions, nil
 }

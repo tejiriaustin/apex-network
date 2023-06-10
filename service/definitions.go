@@ -40,5 +40,9 @@ type (
 			input GameIsInitializedInput,
 			PlayerRepo repository.PlayerRepositoryInterface,
 		) (*models.Player, error)
+		GetWalletTransactions(ctx context.Context,
+			input GetTransactionLogsInput,
+			walletRepo repository.WalletRepositoryInterface,
+		) ([]*models.WalletTransaction, error)
 	}
 )

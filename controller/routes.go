@@ -32,6 +32,7 @@ func Routes(
 		gameRouter.POST("/start/:Player_id", controller.StartGameSession(sc, repo.PlayerRepo))
 		gameRouter.DELETE("/end/:Player_id", controller.EndGameSession(sc, repo.PlayerRepo))
 		gameRouter.POST("/roll-dice/:Player_id", controller.RollDice(sc, repo.PlayerRepo, repo.WalletRpo))
-		gameRouter.GET("/is-playing")
+		gameRouter.GET("/is-playing/:player_id", controller.GameInSession(sc, repo.PlayerRepo))
+		gameRouter.GET("/transactions/:player_id", controller.WalletTransactions(sc, repo.WalletRpo))
 	}
 }

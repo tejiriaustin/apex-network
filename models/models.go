@@ -52,6 +52,7 @@ type (
 	}
 	WalletTransaction struct {
 		Shared
+		PlayerId        uuid.UUID              `json:"player_id"`
 		Amount          int                    `json:"amount"`
 		Description     TransactionDescription `json:"description"`
 		TransactionType TransactionType        `json:"transaction_type"`

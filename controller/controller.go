@@ -194,3 +194,20 @@ func (c *Controller) GameInSession(sc service.ServiceInterface,
 		response.FormatResponse(ctx, http.StatusOK, "OK", resp)
 	}
 }
+
+func (c *Controller) WalletTransactions(sc service.ServiceInterface,
+	walletRepo repository.WalletRepositoryInterface,
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		input := service.GetTransactionLogsInput{
+			PlayerId: ctx.Param("player_id"),
+		}
+
+		transactions, err := sc.GetWalletTransactions(ctx, input, walletRepo)
+		if err != nil {
+			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		response.FormatResponse(ctx, http.StatusOK, "OK", transactions)
+	}
+}
