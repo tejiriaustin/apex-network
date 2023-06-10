@@ -41,7 +41,7 @@ type (
 		FirstName         string `json:"first_name"`
 		LastName          string `json:"last_name"`
 		FullName          string `json:"full_name"`
-		IsPlaying         bool   `json:"is_playing" gorm:"column:is_playing;type:boolean;default:false"`
+		IsPlaying         bool   `json:"is_playing"`
 		WalletBalance     int    `json:"wallet_balance"`
 		TargetNumber      int    `json:"target_number"`
 		DiceSum           int    `json:"dice_sum"`

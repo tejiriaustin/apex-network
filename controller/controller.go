@@ -35,9 +35,11 @@ func (c *Controller) FundWallet(sc service.ServiceInterface,
 		}
 
 		resp := struct {
-			Balance int `json:"balance"`
+			Balance int    `json:"balance"`
+			Asset   string `json:"asset"`
 		}{
 			Balance: walletBalance,
+			Asset:   "sats",
 		}
 
 		response.FormatResponse(ctx, http.StatusOK, "OK", resp)
@@ -141,13 +143,15 @@ func (c *Controller) RollDice(sc service.ServiceInterface,
 			return
 		}
 		resp := struct {
-			Draw   string `json:"target"`
-			Asset  string `json:"asset"`
-			Status string `json:"status"`
+			TargetNumber string `json:"target_number"`
+			Draw         string `json:"draw"`
+			Asset        string `json:"asset"`
+			Status       string `json:"status"`
 		}{
-			Draw:   strconv.Itoa(rolledDie),
-			Asset:  "sats",
-			Status: status(player.TargetNumber, player.DiceSum),
+			TargetNumber: strconv.Itoa(player.TargetNumber),
+			Draw:         strconv.Itoa(rolledDie),
+			Asset:        "sats",
+			Status:       status(player.TargetNumber, player.DiceSum),
 		}
 		response.FormatResponse(ctx, http.StatusOK, "OK", resp)
 	}
