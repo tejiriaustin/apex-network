@@ -41,7 +41,7 @@ func SetEnvironmentConfigs() env.Env {
 	config := env.NewEnv()
 
 	config.SetEnv("servie_name", "apex-network-api").
-		SetEnv("PORT", "8080").
+		SetEnv(env.Port, env.MustGetEnv(env.Port)).
 		SetEnv(env.DbUrl, env.MustGetEnv(env.DbUrl))
 
 	return config

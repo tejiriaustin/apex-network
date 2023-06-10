@@ -6,12 +6,8 @@ import (
 )
 
 const (
-	DbUsername = "DB_USERNAME"
-	DbHost     = "DB_HOST"
-	DbPassword = "DB_PASSWORD"
-	DbDatabase = "DB_DATABASE"
-	DbTimeZone = "DB_TIMEZONE"
-	DbUrl      = "DB_URL"
+	Port  = "PORT"
+	DbUrl = "DB_URL"
 )
 
 type Env map[string]interface{}
@@ -22,7 +18,7 @@ func NewEnv() Env {
 func init() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		panic("failed to load ")
+		panic("failed to load")
 	}
 }
 
