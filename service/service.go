@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/tejiriaustin/apex-network/env"
 	"github.com/tejiriaustin/apex-network/models"
@@ -185,13 +184,11 @@ func (u *Service) EndGameSession(ctx context.Context,
 	}
 
 	player.IsPlaying = false
-	fmt.Println(player)
 	_, err = repo.UpdatePlayer(ctx, input.PlayerId, *player)
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(player)
 	return nil
 }
 
