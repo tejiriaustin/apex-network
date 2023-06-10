@@ -12,7 +12,7 @@ type WalletRepository struct {
 }
 
 type WalletRepositoryInterface interface {
-	GetWalletTransactions(ctx context.Context, filter QueryFilter) ([]*models.WalletTransaction, error)
+	GetWalletTransactions(ctx context.Context, playerID string) ([]*models.WalletTransaction, error)
 	CreateTransaction(ctx context.Context, tx *models.WalletTransaction) (*models.WalletTransaction, error)
 }
 
@@ -25,10 +25,10 @@ func NewWalletRepository(config env.Env, dbClient *database.Client) WalletReposi
 
 var _ WalletRepositoryInterface = (*WalletRepository)(nil)
 
-func (w *WalletRepository) GetWalletTransactions(ctx context.Context, filter QueryFilter) ([]*models.WalletTransaction, error) {
+func (w *WalletRepository) GetWalletTransactions(ctx context.Context, playerID string) ([]*models.WalletTransaction, error) {
 	transaction := make([]*models.WalletTransaction, 0)
 	if err := w.db.WithContext(ctx).
-		Find(transaction, filter.GetFilter()).
+		Find(&transaction, "id = ?", playerID).
 		Error; err != nil {
 		return nil, err
 	}
@@ -37,7 +37,7 @@ func (w *WalletRepository) GetWalletTransactions(ctx context.Context, filter Que
 }
 
 func (w *WalletRepository) CreateTransaction(ctx context.Context, tx *models.WalletTransaction) (*models.WalletTransaction, error) {
-	if err := w.db.WithContext(ctx).Create(tx).Error; err != nil {
+	if err := w.db.WithContext(ctx).Create(&tx).Error; err != nil {
 		return nil, err
 	}
 	return tx, nil

@@ -41,7 +41,7 @@ func structuredLogs(logger *zap.Logger) gin.HandlerFunc {
 		param.Path = path
 
 		if c.Writer.Status() >= 500 {
-			logger.Error(c.Request.Response.Status,
+			logger.Error("error",
 				zap.String("method", param.Method),
 				zap.Int("status_code", param.StatusCode),
 				zap.Int("body_size", param.BodySize),

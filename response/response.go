@@ -3,8 +3,8 @@ package response
 import "github.com/gin-gonic/gin"
 
 type Response struct {
-	Message string      `json:"message"`
-	Body    interface{} `json:"body"`
+	Message string      `json:"message,omitempty"`
+	Body    interface{} `json:"body,omitempty"`
 }
 
 func FormatResponse(c *gin.Context, statusCode int, message string, body interface{}) {

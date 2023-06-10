@@ -73,7 +73,7 @@ func (c *Controller) GetWalletBalance(sc service.ServiceInterface,
 	return func(ctx *gin.Context) {
 
 		input := service.GetWalletBalanceInput{
-			UserId: ctx.Query("user_id"),
+			UserId: ctx.Param("user_id"),
 		}
 
 		balance, err := sc.GetWalletBalance(ctx, input, repo)
@@ -98,11 +98,13 @@ func (c *Controller) StartGameSession(sc service.ServiceInterface,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		input := service.StartGameSessionInput{UserId: ctx.Param("user_id")}
+		input := service.StartGameSessionInput{
+			UserId: ctx.Param("user_id"),
+		}
 
 		err := sc.StartGameSession(ctx, input, repo)
 		if err != nil {
-			response.FormatResponse(ctx, http.StatusInternalServerError, "Internal Server Error", nil)
+			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
 		response.FormatResponse(ctx, http.StatusOK, "OK", nil)
@@ -115,11 +117,13 @@ func (c *Controller) RollDice(sc service.ServiceInterface,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		input := service.RollDiceInput{UserId: ctx.Param("user_id")}
+		input := service.RollDiceInput{
+			UserId: ctx.Param("user_id"),
+		}
 
 		err := sc.RollDice(ctx, input, userRepo, walletRepo)
 		if err != nil {
-			response.FormatResponse(ctx, http.StatusInternalServerError, "Internal Server Error", nil)
+			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
 		response.FormatResponse(ctx, http.StatusOK, "OK", nil)
@@ -131,11 +135,13 @@ func (c *Controller) EndGameSession(sc service.ServiceInterface,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
-		input := service.EndGameSessionInput{UserId: ctx.Param("user_id")}
+		input := service.EndGameSessionInput{
+			UserId: ctx.Param("user_id"),
+		}
 
 		err := sc.EndGameSession(ctx, input, repo)
 		if err != nil {
-			response.FormatResponse(ctx, http.StatusInternalServerError, "Internal Server Error", nil)
+			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
 		response.FormatResponse(ctx, http.StatusOK, "OK", nil)

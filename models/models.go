@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
@@ -40,7 +41,7 @@ type (
 		FirstName         string `json:"first_name"`
 		LastName          string `json:"last_name"`
 		FullName          string `json:"full_name"`
-		IsPlaying         bool   `json:"is_playing"`
+		IsPlaying         bool   `json:"is_playing" gorm:"column:is_playing;type:boolean;default:false"`
 		WalletBalance     int    `json:"wallet_balance"`
 		TargetNumber      int    `json:"target_number"`
 		DiceSum           int    `json:"dice_sum"`
@@ -58,8 +59,8 @@ type (
 )
 
 func (s Shared) Init() {
-	id := uuid.New()
-	s.ID = id
+	s.ID = uuid.New()
+	fmt.Println(s)
 	s.CreatedAt = time.Now().UTC()
 }
 
