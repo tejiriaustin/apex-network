@@ -25,7 +25,7 @@ type (
 		StartGameSession(ctx context.Context,
 			input StartGameSessionInput,
 			repo repository.PlayerRepositoryInterface,
-		) error
+		) (*models.Player, error)
 		EndGameSession(ctx context.Context,
 			input EndGameSessionInput,
 			repo repository.PlayerRepositoryInterface,
@@ -34,6 +34,6 @@ type (
 			input RollDiceInput,
 			userRepo repository.PlayerRepositoryInterface,
 			walletRepo repository.WalletRepositoryInterface,
-		) error
+		) (*models.Player, int, error)
 	}
 )

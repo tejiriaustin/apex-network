@@ -2,6 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/tejiriaustin/apex-network/models"
 	"github.com/tejiriaustin/apex-network/repository"
 	"github.com/tejiriaustin/apex-network/requests"
 	"github.com/tejiriaustin/apex-network/response"
@@ -27,7 +28,7 @@ func (c *Controller) FundWallet(sc service.ServiceInterface,
 		}
 		walletBalance, err := sc.FundWallet(ctx, input, repo)
 		if err != nil {
-			response.FormatResponse(ctx, http.StatusBadRequest, "Bad Request", nil)
+			response.FormatResponse(ctx, http.StatusBadRequest, err.Error(), nil)
 			return
 		}
 
@@ -102,12 +103,21 @@ func (c *Controller) StartGameSession(sc service.ServiceInterface,
 			UserId: ctx.Param("user_id"),
 		}
 
-		err := sc.StartGameSession(ctx, input, repo)
+		player, err := sc.StartGameSession(ctx, input, repo)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
-		response.FormatResponse(ctx, http.StatusOK, "OK", nil)
+		resp := struct {
+			Player *models.Player `json:"user"`
+			Target string         `json:"target"`
+			Asset  string         `json:"asset"`
+		}{
+			Player: player,
+			Target: strconv.Itoa(player.TargetNumber),
+			Asset:  "sats",
+		}
+		response.FormatResponse(ctx, http.StatusOK, "OK", resp)
 	}
 }
 
@@ -121,12 +131,21 @@ func (c *Controller) RollDice(sc service.ServiceInterface,
 			UserId: ctx.Param("user_id"),
 		}
 
-		err := sc.RollDice(ctx, input, userRepo, walletRepo)
+		player, rolledDie, err := sc.RollDice(ctx, input, userRepo, walletRepo)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 			return
 		}
-		response.FormatResponse(ctx, http.StatusOK, "OK", nil)
+		resp := struct {
+			Player *models.Player `json:"user"`
+			Draw   string         `json:"target"`
+			Asset  string         `json:"asset"`
+		}{
+			Player: player,
+			Draw:   strconv.Itoa(rolledDie),
+			Asset:  "sats",
+		}
+		response.FormatResponse(ctx, http.StatusOK, "OK", resp)
 	}
 }
 

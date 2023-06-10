@@ -20,6 +20,8 @@ type (
 
 var (
 	defaultFundWalletAmount = 155
+	dieRollCost             = 5
+	startGameCost           = 20
 )
 
 func NewService(env env.Env) ServiceInterface {
@@ -109,27 +111,32 @@ func (u *Service) GetWalletBalance(ctx context.Context,
 func (u *Service) StartGameSession(ctx context.Context,
 	input StartGameSessionInput,
 	repo repository.PlayerRepositoryInterface,
-) error {
+) (*models.Player, error) {
 	user, err := repo.GetUserbyID(ctx, input.UserId)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	if user.WalletBalance < startGameCost {
+		return nil, errors.New("insufficient wallet balance")
 	}
 
 	fmt.Println(user.IsPlaying)
 	if user.IsPlaying == true {
-		return errors.New("can only start a game when no game is in session")
+		return nil, errors.New("can only start a game when no game is in session")
 	}
 
 	user.TargetNumber = genRandomNumber()
+	user.WalletBalance -= startGameCost
 	user.IsPlaying = true
 
 	fmt.Println("qwertyuiop3")
 	_, err = repo.UpdateUser(ctx, input.UserId, *user)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return user, nil
 }
 
 func (u *Service) EndGameSession(ctx context.Context,
@@ -159,20 +166,22 @@ func (u *Service) RollDice(ctx context.Context,
 	input RollDiceInput,
 	userRepo repository.PlayerRepositoryInterface,
 	walletRepo repository.WalletRepositoryInterface,
-) error {
+) (*models.Player, int, error) {
+
+	rolledDie := genRandomNumber()
 
 	user, err := userRepo.GetUserbyID(ctx, input.UserId)
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
 
 	if user.IsPlaying == false {
-		return errors.New("please start a new session before rolling a dice")
+		return nil, 0, errors.New("please start a new session before rolling a dice")
 	}
 
 	if user.HasRolledFirstDie == true {
 		// Roll die again but don't get debited
-		user.DiceSum += genRandomNumber()
+		user.DiceSum += rolledDie
 
 		if user.DiceSum == user.TargetNumber {
 			tx := models.WalletTransaction{
@@ -183,20 +192,24 @@ func (u *Service) RollDice(ctx context.Context,
 			tx.ID = uuid.New()
 			_, err = walletRepo.CreateTransaction(ctx, &tx)
 			if err != nil {
-				return err
+				return nil, 0, err
 			}
 		}
 		//update hasRolled status to false
 		user.HasRolledFirstDie = false
 		_, err = userRepo.UpdateUser(ctx, input.UserId, *user)
 		if err != nil {
-			return err
+			return nil, 0, err
 		}
-		return nil
+		return user, rolledDie, nil
+	}
+
+	if user.WalletBalance < dieRollCost {
+		return nil, 0, errors.New("insufficient wallet balance")
 	}
 
 	tx := models.WalletTransaction{
-		Amount:          5,
+		Amount:          dieRollCost,
 		Description:     models.RollCost,
 		TransactionType: models.Debit,
 	}
@@ -204,17 +217,19 @@ func (u *Service) RollDice(ctx context.Context,
 
 	_, err = walletRepo.CreateTransaction(ctx, &tx)
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
 
-	user.DiceSum = genRandomNumber()
-	user.WalletBalance -= 5
+	user.DiceSum = rolledDie
+	user.WalletBalance -= dieRollCost
+	user.HasRolledFirstDie = true
+
 	_, err = userRepo.UpdateUser(ctx, input.UserId, *user)
 	if err != nil {
-		return err
+		return nil, 0, err
 	}
 
-	return nil
+	return user, rolledDie, nil
 }
 
 func genRandomNumber() int {
