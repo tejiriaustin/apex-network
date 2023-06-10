@@ -2,7 +2,6 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/tejiriaustin/apex-network/models"
 	"github.com/tejiriaustin/apex-network/repository"
 	"github.com/tejiriaustin/apex-network/requests"
 	"github.com/tejiriaustin/apex-network/response"
@@ -109,11 +108,9 @@ func (c *Controller) StartGameSession(sc service.ServiceInterface,
 			return
 		}
 		resp := struct {
-			Player *models.Player `json:"user"`
-			Target string         `json:"target"`
-			Asset  string         `json:"asset"`
+			Target string `json:"target"`
+			Asset  string `json:"asset"`
 		}{
-			Player: player,
 			Target: strconv.Itoa(player.TargetNumber),
 			Asset:  "sats",
 		}
@@ -137,16 +134,23 @@ func (c *Controller) RollDice(sc service.ServiceInterface,
 			return
 		}
 		resp := struct {
-			Player *models.Player `json:"user"`
-			Draw   string         `json:"target"`
-			Asset  string         `json:"asset"`
+			Draw   string `json:"target"`
+			Asset  string `json:"asset"`
+			Status string `json:"status"`
 		}{
-			Player: player,
 			Draw:   strconv.Itoa(rolledDie),
 			Asset:  "sats",
+			Status: status(player.TargetNumber, player.DiceSum),
 		}
 		response.FormatResponse(ctx, http.StatusOK, "OK", resp)
 	}
+}
+
+func status(target, cast int) string {
+	if cast == target {
+		return "WON"
+	}
+	return "LOST"
 }
 
 func (c *Controller) EndGameSession(sc service.ServiceInterface,

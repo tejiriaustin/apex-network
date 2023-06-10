@@ -121,7 +121,6 @@ func (u *Service) StartGameSession(ctx context.Context,
 		return nil, errors.New("insufficient wallet balance")
 	}
 
-	fmt.Println(user.IsPlaying)
 	if user.IsPlaying == true {
 		return nil, errors.New("can only start a game when no game is in session")
 	}
@@ -130,7 +129,6 @@ func (u *Service) StartGameSession(ctx context.Context,
 	user.WalletBalance -= startGameCost
 	user.IsPlaying = true
 
-	fmt.Println("qwertyuiop3")
 	_, err = repo.UpdateUser(ctx, input.UserId, *user)
 	if err != nil {
 		return nil, err
