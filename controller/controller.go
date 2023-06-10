@@ -81,13 +81,13 @@ func (c *Controller) GetWalletBalance(sc service.ServiceInterface,
 
 		balance, err := sc.GetWalletBalance(ctx, input, repo)
 		if err != nil {
-			response.FormatResponse(ctx, http.StatusBadRequest, "Bad Request", nil)
+			response.FormatResponse(ctx, http.StatusBadRequest, err.Error(), nil)
 			return
 		}
 
 		resp := struct {
 			Balance string `json:"balance"`
-			Asset   string
+			Asset   string `json:"asset"`
 		}{
 			Balance: strconv.Itoa(balance),
 			Asset:   "sats",

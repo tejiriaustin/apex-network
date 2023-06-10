@@ -21,6 +21,7 @@ var (
 	defaultFundWalletAmount = 155
 	dieRollCost             = 5
 	startGameCost           = 20
+	winReward               = 10
 )
 
 func NewService(env env.Env) ServiceInterface {
@@ -209,28 +210,25 @@ func (u *Service) RollDice(ctx context.Context,
 		return nil, 0, errors.New("please start a new session before rolling a dice")
 	}
 
-	if player.HasRolledFirstDie == true {
+	if player.HasRolledFirstDie {
 		// Roll die again but don't get debited
 		player.DiceSum += rolledDie
 
 		if player.DiceSum == player.TargetNumber {
-			tx := models.WalletTransaction{
-				Amount:          10,
-				Description:     models.RollCost,
-				TransactionType: models.Credit,
-			}
-			tx.ID = uuid.New()
-			_, err = walletRepo.CreateTransaction(ctx, &tx)
+			err := rewardWin(ctx, *player, PlayerRepo, walletRepo)
 			if err != nil {
 				return nil, 0, err
 			}
+			return player, rolledDie, nil
 		}
+
 		//update hasRolled status to false
 		player.HasRolledFirstDie = false
 		_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *player)
 		if err != nil {
 			return nil, 0, err
 		}
+
 		return player, rolledDie, nil
 	}
 
@@ -239,12 +237,13 @@ func (u *Service) RollDice(ctx context.Context,
 	}
 
 	tx := models.WalletTransaction{
+		PlayerId:        player.ID,
 		Amount:          dieRollCost,
 		Description:     models.RollCost,
 		TransactionType: models.Debit,
 	}
-	tx.ID = uuid.New()
 
+	tx.ID = uuid.New()
 	_, err = walletRepo.CreateTransaction(ctx, &tx)
 	if err != nil {
 		return nil, 0, err
@@ -260,6 +259,31 @@ func (u *Service) RollDice(ctx context.Context,
 	}
 
 	return player, rolledDie, nil
+}
+
+func rewardWin(ctx context.Context,
+	player models.Player,
+	PlayerRepo repository.PlayerRepositoryInterface,
+	walletRepo repository.WalletRepositoryInterface) error {
+
+	tx := models.WalletTransaction{
+		PlayerId:        player.ID,
+		Amount:          10,
+		Description:     models.RollCost,
+		TransactionType: models.Credit,
+	}
+	tx.ID = uuid.New()
+	_, err := walletRepo.CreateTransaction(ctx, &tx)
+	if err != nil {
+		return err
+	}
+
+	player.WalletBalance += winReward
+	_, err = PlayerRepo.UpdatePlayer(ctx, player.ID.String(), player)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *Service) GameIsInitialized(ctx context.Context,
