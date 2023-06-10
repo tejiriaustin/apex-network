@@ -1,6 +1,6 @@
 package requests
 
-type CreateUserRequest struct {
+type CreatePlayerRequest struct {
 	FirstName string `json:"first_name"`
 	LastName  string `json:"last_name"`
 }

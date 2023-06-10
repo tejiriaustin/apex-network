@@ -23,10 +23,10 @@ const (
 )
 
 const (
-	FieldUserBalance            = "balance"
-	FieldUserIsPlaying          = "is_playing"
-	FieldUserTargetNumber       = "target_number"
-	FieldUserHasRolledFirstDice = "has_rolled_first_dice"
+	FieldPlayerBalance            = "balance"
+	FieldPlayerIsPlaying          = "is_playing"
+	FieldPlayerTargetNumber       = "target_number"
+	FieldPlayerHasRolledFirstDice = "has_rolled_first_dice"
 )
 
 type (
@@ -69,7 +69,7 @@ func (u Player) GetFullName() string {
 }
 
 func (Player) TableName() string {
-	return "users"
+	return "Players"
 }
 
 func (WalletTransaction) TableName() string {

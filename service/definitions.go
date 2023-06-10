@@ -9,8 +9,8 @@ import (
 
 type (
 	ServiceInterface interface {
-		CreateUser(ctx context.Context,
-			input CreateUserInput,
+		CreatePlayer(ctx context.Context,
+			input CreatePlayerInput,
 			repo repository.PlayerRepositoryInterface,
 		) (*models.Player, error)
 
@@ -32,8 +32,13 @@ type (
 		) error
 		RollDice(ctx context.Context,
 			input RollDiceInput,
-			userRepo repository.PlayerRepositoryInterface,
+			PlayerRepo repository.PlayerRepositoryInterface,
 			walletRepo repository.WalletRepositoryInterface,
 		) (*models.Player, int, error)
+
+		GameIsInitialized(ctx context.Context,
+			input GameIsInitializedInput,
+			PlayerRepo repository.PlayerRepositoryInterface,
+		) (*models.Player, error)
 	}
 )

@@ -23,7 +23,7 @@ func (c *Controller) FundWallet(sc service.ServiceInterface,
 	return func(ctx *gin.Context) {
 
 		input := service.FundWalletInput{
-			UserId: ctx.Param("user_id"),
+			PlayerId: ctx.Param("player_id"),
 		}
 		walletBalance, err := sc.FundWallet(ctx, input, repo)
 		if err != nil {
@@ -41,29 +41,29 @@ func (c *Controller) FundWallet(sc service.ServiceInterface,
 	}
 }
 
-func (c *Controller) CreateUser(sc service.ServiceInterface,
+func (c *Controller) CreatePlayer(sc service.ServiceInterface,
 	repo repository.PlayerRepositoryInterface,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var req requests.CreateUserRequest
+		var req requests.CreatePlayerRequest
 		err := ctx.ShouldBindJSON(&req)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusBadRequest, "Bad Request", nil)
 			return
 		}
 
-		input := service.CreateUserInput{
+		input := service.CreatePlayerInput{
 			FirstName: req.FirstName,
 			LastName:  req.LastName,
 		}
 
-		user, err := sc.CreateUser(ctx, input, repo)
+		Player, err := sc.CreatePlayer(ctx, input, repo)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusBadRequest, "Bad Request", nil)
 			return
 		}
 
-		response.FormatResponse(ctx, http.StatusOK, "OK", user)
+		response.FormatResponse(ctx, http.StatusOK, "OK", Player)
 	}
 }
 
@@ -73,7 +73,7 @@ func (c *Controller) GetWalletBalance(sc service.ServiceInterface,
 	return func(ctx *gin.Context) {
 
 		input := service.GetWalletBalanceInput{
-			UserId: ctx.Param("user_id"),
+			PlayerId: ctx.Param("player_id"),
 		}
 
 		balance, err := sc.GetWalletBalance(ctx, input, repo)
@@ -99,7 +99,7 @@ func (c *Controller) StartGameSession(sc service.ServiceInterface,
 	return func(ctx *gin.Context) {
 
 		input := service.StartGameSessionInput{
-			UserId: ctx.Param("user_id"),
+			PlayerId: ctx.Param("player_id"),
 		}
 
 		player, err := sc.StartGameSession(ctx, input, repo)
@@ -119,16 +119,16 @@ func (c *Controller) StartGameSession(sc service.ServiceInterface,
 }
 
 func (c *Controller) RollDice(sc service.ServiceInterface,
-	userRepo repository.PlayerRepositoryInterface,
+	PlayerRepo repository.PlayerRepositoryInterface,
 	walletRepo repository.WalletRepositoryInterface,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		input := service.RollDiceInput{
-			UserId: ctx.Param("user_id"),
+			PlayerId: ctx.Param("player_id"),
 		}
 
-		player, rolledDie, err := sc.RollDice(ctx, input, userRepo, walletRepo)
+		player, rolledDie, err := sc.RollDice(ctx, input, PlayerRepo, walletRepo)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 			return
@@ -159,7 +159,7 @@ func (c *Controller) EndGameSession(sc service.ServiceInterface,
 	return func(ctx *gin.Context) {
 
 		input := service.EndGameSessionInput{
-			UserId: ctx.Param("user_id"),
+			PlayerId: ctx.Param("player_id"),
 		}
 
 		err := sc.EndGameSession(ctx, input, repo)
@@ -169,5 +169,28 @@ func (c *Controller) EndGameSession(sc service.ServiceInterface,
 		}
 		response.FormatResponse(ctx, http.StatusOK, "OK", nil)
 
+	}
+}
+
+func (c *Controller) GameInSession(sc service.ServiceInterface,
+	repo repository.PlayerRepositoryInterface,
+) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		input := service.GameIsInitializedInput{
+			PlayerId: ctx.Param("player_id"),
+		}
+
+		player, err := sc.GameIsInitialized(ctx, input, repo)
+		if err != nil {
+			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
+			return
+		}
+		resp := struct {
+			GameInSession bool `json:"game_in_session"`
+		}{
+			GameInSession: player.IsPlaying,
+		}
+
+		response.FormatResponse(ctx, http.StatusOK, "OK", resp)
 	}
 }

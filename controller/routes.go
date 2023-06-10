@@ -26,11 +26,12 @@ func Routes(
 
 	gameRouter := r.Group("/game")
 	{
-		gameRouter.POST("/create-user", controller.CreateUser(sc, repo.PlayerRepo))
-		gameRouter.POST("/fund-wallet/:user_id", controller.FundWallet(sc, repo.PlayerRepo))
-		gameRouter.GET("/balance/:user_id", controller.GetWalletBalance(sc, repo.PlayerRepo))
-		gameRouter.POST("/start/:user_id", controller.StartGameSession(sc, repo.PlayerRepo))
-		gameRouter.DELETE("/end/:user_id", controller.EndGameSession(sc, repo.PlayerRepo))
-		gameRouter.POST("/roll-dice/:user_id", controller.RollDice(sc, repo.PlayerRepo, repo.WalletRpo))
+		gameRouter.POST("/create-Player", controller.CreatePlayer(sc, repo.PlayerRepo))
+		gameRouter.POST("/fund-wallet/:Player_id", controller.FundWallet(sc, repo.PlayerRepo))
+		gameRouter.GET("/balance/:Player_id", controller.GetWalletBalance(sc, repo.PlayerRepo))
+		gameRouter.POST("/start/:Player_id", controller.StartGameSession(sc, repo.PlayerRepo))
+		gameRouter.DELETE("/end/:Player_id", controller.EndGameSession(sc, repo.PlayerRepo))
+		gameRouter.POST("/roll-dice/:Player_id", controller.RollDice(sc, repo.PlayerRepo, repo.WalletRpo))
+		gameRouter.GET("/is-playing")
 	}
 }

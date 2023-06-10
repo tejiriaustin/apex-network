@@ -33,108 +33,111 @@ func NewService(env env.Env) ServiceInterface {
 var _ ServiceInterface = (*Service)(nil)
 
 type (
-	CreateUserInput struct {
+	CreatePlayerInput struct {
 		FirstName string
 		LastName  string
 	}
 	FundWalletInput struct {
-		UserId string
+		PlayerId string
 	}
 
 	GetWalletBalanceInput struct {
-		UserId string
+		PlayerId string
 	}
 	StartGameSessionInput struct {
-		UserId string
+		PlayerId string
 	}
 	EndGameSessionInput struct {
-		UserId string
+		PlayerId string
 	}
 	RollDiceInput struct {
-		UserId string
+		PlayerId string
+	}
+	GameIsInitializedInput struct {
+		PlayerId string
 	}
 )
 
-func (u *Service) CreateUser(ctx context.Context,
-	input CreateUserInput,
+func (u *Service) CreatePlayer(ctx context.Context,
+	input CreatePlayerInput,
 	repo repository.PlayerRepositoryInterface,
 ) (*models.Player, error) {
 
-	user := models.Player{
+	Player := models.Player{
 		FirstName:     input.FirstName,
 		LastName:      input.LastName,
 		IsPlaying:     false,
 		WalletBalance: 0,
 	}
-	user.ID = uuid.New()
-	user.CreatedAt = time.Now().UTC()
-	user.FullName = user.GetFullName()
+	Player.ID = uuid.New()
+	Player.CreatedAt = time.Now().UTC()
+	Player.FullName = Player.GetFullName()
 
-	return repo.CreateUser(ctx, user)
+	return repo.CreatePlayer(ctx, Player)
 }
 
 func (u *Service) FundWallet(ctx context.Context,
 	input FundWalletInput,
 	repo repository.PlayerRepositoryInterface) (int, error) {
 
-	user, err := repo.GetUserbyID(ctx, input.UserId)
+	Player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return 0, err
 	}
 
-	if user.WalletBalance > 35 {
+	if Player.WalletBalance > 35 {
 		return 0, errors.New("player can only fund wallet when balance is less than 35")
 	}
 
-	user.WalletBalance += defaultFundWalletAmount
+	Player.WalletBalance += defaultFundWalletAmount
 
-	user, err = repo.UpdateUser(ctx, user.ID.String(), *user)
+	Player, err = repo.UpdatePlayer(ctx, Player.ID.String(), *Player)
 	if err != nil {
 		fmt.Println(err.Error())
 		return 0, err
 	}
 
-	return user.WalletBalance, nil
+	return Player.WalletBalance, nil
 }
 
 func (u *Service) GetWalletBalance(ctx context.Context,
 	input GetWalletBalanceInput,
 	repo repository.PlayerRepositoryInterface) (int, error) {
 
-	user, err := repo.GetUserbyID(ctx, input.UserId)
+	Player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return 0, err
 	}
-	return user.WalletBalance, nil
+	return Player.WalletBalance, nil
 }
 
 func (u *Service) StartGameSession(ctx context.Context,
 	input StartGameSessionInput,
 	repo repository.PlayerRepositoryInterface,
 ) (*models.Player, error) {
-	user, err := repo.GetUserbyID(ctx, input.UserId)
+	Player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return nil, err
 	}
 
-	if user.WalletBalance < startGameCost {
+	if Player.WalletBalance < startGameCost {
 		return nil, errors.New("insufficient wallet balance")
 	}
 
-	if user.IsPlaying == true {
+	if Player.IsPlaying == true {
 		return nil, errors.New("can only start a game when no game is in session")
 	}
 
-	user.TargetNumber = genRandomNumber()
-	user.WalletBalance -= startGameCost
-	user.IsPlaying = true
+	Player.TargetNumber = genRandomNumber()
+	Player.WalletBalance -= startGameCost
+	Player.IsPlaying = true
 
-	_, err = repo.UpdateUser(ctx, input.UserId, *user)
+	_, err = repo.UpdatePlayer(ctx, input.PlayerId, *Player)
 	if err != nil {
 		return nil, err
 	}
 
-	return user, nil
+	return Player, nil
 }
 
 func (u *Service) EndGameSession(ctx context.Context,
@@ -142,17 +145,17 @@ func (u *Service) EndGameSession(ctx context.Context,
 	repo repository.PlayerRepositoryInterface,
 ) error {
 
-	user, err := repo.GetUserbyID(ctx, input.UserId)
+	Player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return err
 	}
 
-	if user.IsPlaying == false {
+	if Player.IsPlaying == false {
 		return errors.New("can only end a game if an active game is in session")
 	}
 
-	user.IsPlaying = false
-	_, err = repo.UpdateUser(ctx, input.UserId, *user)
+	Player.IsPlaying = false
+	_, err = repo.UpdatePlayer(ctx, input.PlayerId, *Player)
 	if err != nil {
 		return err
 	}
@@ -162,26 +165,26 @@ func (u *Service) EndGameSession(ctx context.Context,
 
 func (u *Service) RollDice(ctx context.Context,
 	input RollDiceInput,
-	userRepo repository.PlayerRepositoryInterface,
+	PlayerRepo repository.PlayerRepositoryInterface,
 	walletRepo repository.WalletRepositoryInterface,
 ) (*models.Player, int, error) {
 
 	rolledDie := genRandomNumber()
 
-	user, err := userRepo.GetUserbyID(ctx, input.UserId)
+	Player, err := PlayerRepo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if user.IsPlaying == false {
+	if Player.IsPlaying == false {
 		return nil, 0, errors.New("please start a new session before rolling a dice")
 	}
 
-	if user.HasRolledFirstDie == true {
+	if Player.HasRolledFirstDie == true {
 		// Roll die again but don't get debited
-		user.DiceSum += rolledDie
+		Player.DiceSum += rolledDie
 
-		if user.DiceSum == user.TargetNumber {
+		if Player.DiceSum == Player.TargetNumber {
 			tx := models.WalletTransaction{
 				Amount:          10,
 				Description:     models.RollCost,
@@ -194,15 +197,15 @@ func (u *Service) RollDice(ctx context.Context,
 			}
 		}
 		//update hasRolled status to false
-		user.HasRolledFirstDie = false
-		_, err = userRepo.UpdateUser(ctx, input.UserId, *user)
+		Player.HasRolledFirstDie = false
+		_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *Player)
 		if err != nil {
 			return nil, 0, err
 		}
-		return user, rolledDie, nil
+		return Player, rolledDie, nil
 	}
 
-	if user.WalletBalance < dieRollCost {
+	if Player.WalletBalance < dieRollCost {
 		return nil, 0, errors.New("insufficient wallet balance")
 	}
 
@@ -218,20 +221,32 @@ func (u *Service) RollDice(ctx context.Context,
 		return nil, 0, err
 	}
 
-	user.DiceSum = rolledDie
-	user.WalletBalance -= dieRollCost
-	user.HasRolledFirstDie = true
+	Player.DiceSum = rolledDie
+	Player.WalletBalance -= dieRollCost
+	Player.HasRolledFirstDie = true
 
-	_, err = userRepo.UpdateUser(ctx, input.UserId, *user)
+	_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *Player)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return user, rolledDie, nil
+	return Player, rolledDie, nil
 }
 
 func genRandomNumber() int {
 	rand.Seed(time.Now().Unix())
 	number := rand.Intn(10) + 2
 	return number
+}
+
+func (u *Service) GameIsInitialized(ctx context.Context,
+	input GameIsInitializedInput,
+	PlayerRepo repository.PlayerRepositoryInterface,
+) (*models.Player, error) {
+
+	player, err := PlayerRepo.GetPlayerbyID(ctx, input.PlayerId)
+	if err != nil {
+		return nil, err
+	}
+	return player, nil
 }
