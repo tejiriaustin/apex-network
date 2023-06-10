@@ -199,7 +199,7 @@ func (c *Controller) GameInSession(sc service.ServiceInterface,
 		resp := struct {
 			GameInSession bool `json:"game_in_session"`
 		}{
-			GameInSession: player.IsPlaying,
+			GameInSession: *player.IsPlaying,
 		}
 
 		response.FormatResponse(ctx, http.StatusOK, "OK", resp)

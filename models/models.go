@@ -22,13 +22,6 @@ const (
 	WinRoll    TransactionDescription = "win-roll"
 )
 
-const (
-	FieldPlayerBalance            = "balance"
-	FieldPlayerIsPlaying          = "is_playing"
-	FieldPlayerTargetNumber       = "target_number"
-	FieldPlayerHasRolledFirstDice = "has_rolled_first_dice"
-)
-
 type (
 	Shared struct {
 		ID        uuid.UUID `json:"id"`
@@ -41,11 +34,11 @@ type (
 		FirstName         string `json:"first_name"`
 		LastName          string `json:"last_name"`
 		FullName          string `json:"full_name"`
-		IsPlaying         bool   `json:"is_playing"`
+		IsPlaying         *bool  `json:"is_playing"`
 		WalletBalance     int    `json:"wallet_balance"`
 		TargetNumber      int    `json:"target_number"`
 		DiceSum           int    `json:"dice_sum"`
-		HasRolledFirstDie bool   `json:"has_rolled"`
+		HasRolledFirstDie *bool  `json:"has_rolled_first_die"`
 	}
 	Game struct {
 		Shared

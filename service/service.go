@@ -22,6 +22,9 @@ var (
 	dieRollCost             = 5
 	startGameCost           = 20
 	winReward               = 10
+
+	False = false
+	True  = true
 )
 
 func NewService(env env.Env) ServiceInterface {
@@ -67,10 +70,11 @@ func (u *Service) CreatePlayer(ctx context.Context,
 ) (*models.Player, error) {
 
 	Player := models.Player{
-		FirstName:     input.FirstName,
-		LastName:      input.LastName,
-		IsPlaying:     false,
-		WalletBalance: 0,
+		FirstName:         input.FirstName,
+		LastName:          input.LastName,
+		IsPlaying:         &False,
+		WalletBalance:     0,
+		HasRolledFirstDie: &False,
 	}
 	Player.ID = uuid.New()
 	Player.CreatedAt = time.Now().UTC()
@@ -132,6 +136,7 @@ func (u *Service) StartGameSession(ctx context.Context,
 	playerRepo repository.PlayerRepositoryInterface,
 	walletRepo repository.WalletRepositoryInterface,
 ) (*models.Player, error) {
+
 	Player, err := playerRepo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return nil, err
@@ -141,13 +146,13 @@ func (u *Service) StartGameSession(ctx context.Context,
 		return nil, errors.New("insufficient wallet balance")
 	}
 
-	if Player.IsPlaying == true {
+	if Player.IsPlaying == &True {
 		return nil, errors.New("can only start a game when no game is in session")
 	}
 
 	Player.TargetNumber = randFunc()
 	Player.WalletBalance -= startGameCost
-	Player.IsPlaying = true
+	Player.IsPlaying = &True
 
 	_, err = playerRepo.UpdatePlayer(ctx, input.PlayerId, *Player)
 	if err != nil {
@@ -179,11 +184,11 @@ func (u *Service) EndGameSession(ctx context.Context,
 		return err
 	}
 
-	if player.IsPlaying == false {
+	if *player.IsPlaying == false {
 		return errors.New("can only end a game if an active game is in session")
 	}
 
-	player.IsPlaying = false
+	player.IsPlaying = &False
 	_, err = repo.UpdatePlayer(ctx, input.PlayerId, *player)
 	if err != nil {
 		return err
@@ -206,11 +211,11 @@ func (u *Service) RollDice(ctx context.Context,
 		return nil, 0, err
 	}
 
-	if player.IsPlaying == false {
+	if player.IsPlaying == &False {
 		return nil, 0, errors.New("please start a new session before rolling a dice")
 	}
 
-	if player.HasRolledFirstDie {
+	if *player.HasRolledFirstDie == true {
 		// Roll die again but don't get debited
 		player.DiceSum += rolledDie
 
@@ -223,7 +228,7 @@ func (u *Service) RollDice(ctx context.Context,
 		}
 
 		//update hasRolled status to false
-		player.HasRolledFirstDie = false
+		player.HasRolledFirstDie = &False
 		_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *player)
 		if err != nil {
 			return nil, 0, err
@@ -251,7 +256,7 @@ func (u *Service) RollDice(ctx context.Context,
 
 	player.DiceSum = rolledDie
 	player.WalletBalance -= dieRollCost
-	player.HasRolledFirstDie = true
+	player.HasRolledFirstDie = &True
 
 	_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *player)
 	if err != nil {
