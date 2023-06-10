@@ -70,7 +70,7 @@ func (u Player) GetFullName() string {
 }
 
 func (Player) TableName() string {
-	return "Players"
+	return "players"
 }
 
 func (WalletTransaction) TableName() string {

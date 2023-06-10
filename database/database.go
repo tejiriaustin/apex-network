@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"github.com/tejiriaustin/apex-network/models"
 	"gorm.io/driver/postgres"
 	"log"
 
@@ -23,9 +24,9 @@ func OpenDatabaseConnection(config env.Env) *Client {
 		log.Panicf("failed to connect to database: %v", err)
 	}
 
-	//err = db.AutoMigrate(&models.Game{}, &models.WalletTransaction{}, models.Player{})
-	//if err != nil {
-	//	log.Panicf("failed to run auto migrate: %v", err)
-	//}
+	err = db.AutoMigrate(&models.Game{}, &models.WalletTransaction{}, models.Player{})
+	if err != nil {
+		log.Panicf("failed to run auto migrate: %v", err)
+	}
 	return &Client{db}
 }
