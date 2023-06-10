@@ -41,7 +41,6 @@ func (u *PlayerRepository) UpdatePlayer(ctx context.Context, playerID string, pl
 
 	if err := u.db.WithContext(ctx).
 		Table(player.TableName()).
-		Where("id = ?", playerID).
 		Updates(&player).
 		Find(&player, "id = ?", playerID).
 		Error; err != nil {

@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"github.com/tejiriaustin/apex-network/repository"
-
 	"github.com/tejiriaustin/apex-network/models"
+	"github.com/tejiriaustin/apex-network/repository"
+	"github.com/tejiriaustin/apex-network/utils"
 )
 
 type (
@@ -16,7 +16,8 @@ type (
 
 		FundWallet(ctx context.Context,
 			input FundWalletInput,
-			repo repository.PlayerRepositoryInterface) (int, error)
+			repo repository.PlayerRepositoryInterface,
+			walletRepo repository.WalletRepositoryInterface) (int, error)
 
 		GetWalletBalance(ctx context.Context,
 			input GetWalletBalanceInput,
@@ -24,14 +25,19 @@ type (
 
 		StartGameSession(ctx context.Context,
 			input StartGameSessionInput,
-			repo repository.PlayerRepositoryInterface,
+			randFunc utils.RandFunc,
+			playerRepo repository.PlayerRepositoryInterface,
+			walletRepo repository.WalletRepositoryInterface,
 		) (*models.Player, error)
+
 		EndGameSession(ctx context.Context,
 			input EndGameSessionInput,
 			repo repository.PlayerRepositoryInterface,
 		) error
+
 		RollDice(ctx context.Context,
 			input RollDiceInput,
+			randFunc utils.RandFunc,
 			PlayerRepo repository.PlayerRepositoryInterface,
 			walletRepo repository.WalletRepositoryInterface,
 		) (*models.Player, int, error)
@@ -40,6 +46,7 @@ type (
 			input GameIsInitializedInput,
 			PlayerRepo repository.PlayerRepositoryInterface,
 		) (*models.Player, error)
+
 		GetWalletTransactions(ctx context.Context,
 			input GetTransactionLogsInput,
 			walletRepo repository.WalletRepositoryInterface,

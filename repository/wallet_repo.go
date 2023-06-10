@@ -29,7 +29,7 @@ func (w *WalletRepository) GetWalletTransactions(ctx context.Context, playerID s
 	transaction := make([]*models.WalletTransaction, 0)
 
 	if err := w.db.WithContext(ctx).
-		Table(transaction[0].TableName()).
+		Table("wallet_transaction").
 		Find(&transaction, "player_id = ?", playerID).
 		Error; err != nil {
 		return nil, err

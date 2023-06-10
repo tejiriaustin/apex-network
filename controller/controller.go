@@ -6,6 +6,7 @@ import (
 	"github.com/tejiriaustin/apex-network/requests"
 	"github.com/tejiriaustin/apex-network/response"
 	"github.com/tejiriaustin/apex-network/service"
+	"github.com/tejiriaustin/apex-network/utils"
 	"net/http"
 	"strconv"
 )
@@ -18,14 +19,16 @@ func NewController() *Controller {
 }
 
 func (c *Controller) FundWallet(sc service.ServiceInterface,
-	repo repository.PlayerRepositoryInterface,
+	playerRepo repository.PlayerRepositoryInterface,
+	walletRepo repository.WalletRepositoryInterface,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 		input := service.FundWalletInput{
 			PlayerId: ctx.Param("player_id"),
 		}
-		walletBalance, err := sc.FundWallet(ctx, input, repo)
+
+		walletBalance, err := sc.FundWallet(ctx, input, playerRepo, walletRepo)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusBadRequest, err.Error(), nil)
 			return
@@ -94,7 +97,8 @@ func (c *Controller) GetWalletBalance(sc service.ServiceInterface,
 }
 
 func (c *Controller) StartGameSession(sc service.ServiceInterface,
-	repo repository.PlayerRepositoryInterface,
+	playerRepo repository.PlayerRepositoryInterface,
+	walletRepo repository.WalletRepositoryInterface,
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
@@ -102,7 +106,9 @@ func (c *Controller) StartGameSession(sc service.ServiceInterface,
 			PlayerId: ctx.Param("player_id"),
 		}
 
-		player, err := sc.StartGameSession(ctx, input, repo)
+		randFunc := utils.GetRandFunc()
+
+		player, err := sc.StartGameSession(ctx, input, randFunc, playerRepo, walletRepo)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 			return
@@ -128,7 +134,8 @@ func (c *Controller) RollDice(sc service.ServiceInterface,
 			PlayerId: ctx.Param("player_id"),
 		}
 
-		player, rolledDie, err := sc.RollDice(ctx, input, PlayerRepo, walletRepo)
+		randFunc := utils.GetRandFunc()
+		player, rolledDie, err := sc.RollDice(ctx, input, randFunc, PlayerRepo, walletRepo)
 		if err != nil {
 			response.FormatResponse(ctx, http.StatusInternalServerError, err.Error(), nil)
 			return

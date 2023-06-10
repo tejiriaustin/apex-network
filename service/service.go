@@ -8,7 +8,7 @@ import (
 	"github.com/tejiriaustin/apex-network/env"
 	"github.com/tejiriaustin/apex-network/models"
 	"github.com/tejiriaustin/apex-network/repository"
-	"math/rand"
+	"github.com/tejiriaustin/apex-network/utils"
 	"time"
 )
 
@@ -81,26 +81,39 @@ func (u *Service) CreatePlayer(ctx context.Context,
 
 func (u *Service) FundWallet(ctx context.Context,
 	input FundWalletInput,
-	repo repository.PlayerRepositoryInterface) (int, error) {
+	repo repository.PlayerRepositoryInterface,
+	walletRepo repository.WalletRepositoryInterface) (int, error) {
 
-	Player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
+	player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return 0, err
 	}
 
-	if Player.WalletBalance > 35 {
+	if player.WalletBalance > 35 {
 		return 0, errors.New("player can only fund wallet when balance is less than 35")
 	}
 
-	Player.WalletBalance += defaultFundWalletAmount
+	player.WalletBalance += defaultFundWalletAmount
 
-	Player, err = repo.UpdatePlayer(ctx, Player.ID.String(), *Player)
+	player, err = repo.UpdatePlayer(ctx, player.ID.String(), *player)
 	if err != nil {
 		fmt.Println(err.Error())
 		return 0, err
 	}
+	transaction := models.WalletTransaction{
+		PlayerId:        player.ID,
+		Amount:          defaultFundWalletAmount,
+		Description:     models.FundWallet,
+		TransactionType: models.Credit,
+	}
+	transaction.ID = uuid.New()
+	transaction.CreatedAt = time.Now().UTC()
+	_, err = walletRepo.CreateTransaction(ctx, &transaction)
+	if err != nil {
+		return 0, err
+	}
 
-	return Player.WalletBalance, nil
+	return player.WalletBalance, nil
 }
 
 func (u *Service) GetWalletBalance(ctx context.Context,
@@ -116,9 +129,11 @@ func (u *Service) GetWalletBalance(ctx context.Context,
 
 func (u *Service) StartGameSession(ctx context.Context,
 	input StartGameSessionInput,
-	repo repository.PlayerRepositoryInterface,
+	randFunc utils.RandFunc,
+	playerRepo repository.PlayerRepositoryInterface,
+	walletRepo repository.WalletRepositoryInterface,
 ) (*models.Player, error) {
-	Player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
+	Player, err := playerRepo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return nil, err
 	}
@@ -131,11 +146,23 @@ func (u *Service) StartGameSession(ctx context.Context,
 		return nil, errors.New("can only start a game when no game is in session")
 	}
 
-	Player.TargetNumber = genRandomNumber()
+	Player.TargetNumber = randFunc()
 	Player.WalletBalance -= startGameCost
 	Player.IsPlaying = true
 
-	_, err = repo.UpdatePlayer(ctx, input.PlayerId, *Player)
+	_, err = playerRepo.UpdatePlayer(ctx, input.PlayerId, *Player)
+	if err != nil {
+		return nil, err
+	}
+	transaction := &models.WalletTransaction{
+		PlayerId:        Player.ID,
+		Amount:          startGameCost,
+		Description:     models.StartGame,
+		TransactionType: models.Debit,
+	}
+	transaction.ID = uuid.New()
+	transaction.CreatedAt = time.Now().UTC()
+	_, err = walletRepo.CreateTransaction(ctx, transaction)
 	if err != nil {
 		return nil, err
 	}
@@ -148,17 +175,17 @@ func (u *Service) EndGameSession(ctx context.Context,
 	repo repository.PlayerRepositoryInterface,
 ) error {
 
-	Player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
+	player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return err
 	}
 
-	if Player.IsPlaying == false {
+	if player.IsPlaying == false {
 		return errors.New("can only end a game if an active game is in session")
 	}
 
-	Player.IsPlaying = false
-	_, err = repo.UpdatePlayer(ctx, input.PlayerId, *Player)
+	player.IsPlaying = false
+	_, err = repo.UpdatePlayer(ctx, input.PlayerId, *player)
 	if err != nil {
 		return err
 	}
@@ -168,26 +195,27 @@ func (u *Service) EndGameSession(ctx context.Context,
 
 func (u *Service) RollDice(ctx context.Context,
 	input RollDiceInput,
+	randFunc utils.RandFunc,
 	PlayerRepo repository.PlayerRepositoryInterface,
 	walletRepo repository.WalletRepositoryInterface,
 ) (*models.Player, int, error) {
 
-	rolledDie := genRandomNumber()
+	rolledDie := randFunc()
 
-	Player, err := PlayerRepo.GetPlayerbyID(ctx, input.PlayerId)
+	player, err := PlayerRepo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	if Player.IsPlaying == false {
+	if player.IsPlaying == false {
 		return nil, 0, errors.New("please start a new session before rolling a dice")
 	}
 
-	if Player.HasRolledFirstDie == true {
+	if player.HasRolledFirstDie == true {
 		// Roll die again but don't get debited
-		Player.DiceSum += rolledDie
+		player.DiceSum += rolledDie
 
-		if Player.DiceSum == Player.TargetNumber {
+		if player.DiceSum == player.TargetNumber {
 			tx := models.WalletTransaction{
 				Amount:          10,
 				Description:     models.RollCost,
@@ -200,15 +228,15 @@ func (u *Service) RollDice(ctx context.Context,
 			}
 		}
 		//update hasRolled status to false
-		Player.HasRolledFirstDie = false
-		_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *Player)
+		player.HasRolledFirstDie = false
+		_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *player)
 		if err != nil {
 			return nil, 0, err
 		}
-		return Player, rolledDie, nil
+		return player, rolledDie, nil
 	}
 
-	if Player.WalletBalance < dieRollCost {
+	if player.WalletBalance < dieRollCost {
 		return nil, 0, errors.New("insufficient wallet balance")
 	}
 
@@ -224,22 +252,16 @@ func (u *Service) RollDice(ctx context.Context,
 		return nil, 0, err
 	}
 
-	Player.DiceSum = rolledDie
-	Player.WalletBalance -= dieRollCost
-	Player.HasRolledFirstDie = true
+	player.DiceSum = rolledDie
+	player.WalletBalance -= dieRollCost
+	player.HasRolledFirstDie = true
 
-	_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *Player)
+	_, err = PlayerRepo.UpdatePlayer(ctx, input.PlayerId, *player)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	return Player, rolledDie, nil
-}
-
-func genRandomNumber() int {
-	rand.Seed(time.Now().Unix())
-	number := rand.Intn(10) + 2
-	return number
+	return player, rolledDie, nil
 }
 
 func (u *Service) GameIsInitialized(ctx context.Context,
