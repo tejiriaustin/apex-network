@@ -16,10 +16,7 @@ func NewEnv() Env {
 	return Env{}
 }
 func init() {
-	err := godotenv.Load(".env")
-	if err != nil {
-		panic("failed to load")
-	}
+	_ = godotenv.Load(".env")
 }
 
 func (e Env) SetEnv(key string, value interface{}) Env {

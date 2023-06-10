@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/tejiriaustin/apex-network/env"
 	"github.com/tejiriaustin/apex-network/models"
@@ -81,10 +80,10 @@ func (u *Service) CreatePlayer(ctx context.Context,
 
 func (u *Service) FundWallet(ctx context.Context,
 	input FundWalletInput,
-	repo repository.PlayerRepositoryInterface,
+	playerRepo repository.PlayerRepositoryInterface,
 	walletRepo repository.WalletRepositoryInterface) (int, error) {
 
-	player, err := repo.GetPlayerbyID(ctx, input.PlayerId)
+	player, err := playerRepo.GetPlayerbyID(ctx, input.PlayerId)
 	if err != nil {
 		return 0, err
 	}
@@ -95,9 +94,8 @@ func (u *Service) FundWallet(ctx context.Context,
 
 	player.WalletBalance += defaultFundWalletAmount
 
-	player, err = repo.UpdatePlayer(ctx, player.ID.String(), *player)
+	player, err = playerRepo.UpdatePlayer(ctx, player.ID.String(), *player)
 	if err != nil {
-		fmt.Println(err.Error())
 		return 0, err
 	}
 	transaction := models.WalletTransaction{
