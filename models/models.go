@@ -16,10 +16,10 @@ const (
 )
 
 const (
-	FundWallet TransactionDescription = "fund-wallet"
-	StartGame  TransactionDescription = "start-game"
-	RollCost   TransactionDescription = "lose-roll"
-	WinRoll    TransactionDescription = "win-roll"
+	FundWallet TransactionDescription = "fund-wallet-cost"
+	StartGame  TransactionDescription = "start-game-cost"
+	RollCost   TransactionDescription = "roll-die-cost"
+	WinRoll    TransactionDescription = "win-roll-reward"
 )
 
 type (
