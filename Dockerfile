@@ -1,0 +1,1 @@
+CMD ["make", "app"]
