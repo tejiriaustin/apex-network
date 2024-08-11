@@ -1,6 +1,8 @@
 # Step 1: Build the Go application
 FROM golang:1.20-alpine AS BUILD_IMAGE
 
+LABEL "Project"="Apex_Network"
+LABEL "Author"="Tejiri"
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -32,4 +34,4 @@ CMD [ "/apex_network apex_network_api" ]
 # EXPOSE 3000
 
 # # Command to run the application
- CMD ["make", "app"]
+#  CMD ["make", "app"]
