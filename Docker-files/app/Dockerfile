@@ -6,16 +6,21 @@ WORKDIR /app
 
 # Copy the Go source code into the container
 COPY ../src/go.mod .
-COPY ../src/main.go .
+COPY *.go ../src/
+COPY .env ../src/
+
+# Download go dependencies
+RUN go mod download
 
 # Build the Go application
 # RUN go mod init example.com/mymodule
-RUN go build -o bin .
+RUN go build -o bin /apex_network
 
-ENTRYPOINT [ "/app/bin"]
+EXPOSE 3000
 
-# # Step 2: Create a lightweight image to run the application
-# FROM alpine:latest
+CMD [ "/apex_network apex_network_api" ]
+
+# ENTRYPOINT [ "/app/bin"]
 
 # # Set the working directory inside the container
 # WORKDIR /root/
