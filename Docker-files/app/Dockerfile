@@ -12,7 +12,7 @@ COPY ../src/main.go .
 # RUN go mod init example.com/mymodule
 RUN go build -o bin .
 
-ENTRYPOINT [ "/app/bin"] 
+ENTRYPOINT [ "/app/bin"]
 
 # # Step 2: Create a lightweight image to run the application
 # FROM alpine:latest

@@ -16,7 +16,7 @@ func NewEnv() Env {
 	return Env{}
 }
 func init() {
-	_ = godotenv.Load(".env")
+	_ = godotenv.Load("../.env")
 }
 
 func (e Env) SetEnv(key string, value interface{}) Env {
