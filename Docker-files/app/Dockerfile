@@ -27,4 +27,4 @@ ENTRYPOINT [ "/app/bin"]
 # EXPOSE 3000
 
 # # Command to run the application
-# CMD ["make", "app"]
+ CMD ["make", "app"]
