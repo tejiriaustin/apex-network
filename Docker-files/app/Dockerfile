@@ -15,23 +15,22 @@ COPY .env ../src/
 RUN go mod download
 
 # Build the Go application
-# RUN go mod init example.com/mymodule
 RUN go build -o bin /apex_network
 
+
+
+# # Step 2: Create a minimal container to run the application
+# FROM alpine:3.18
+
+# # Copy the built Go binary from the builder stage
+# COPY --from=BUILD_IMAGE /apex_network /apex_network
+
+# # Copy .env file if it's needed
+# COPY .env /app/.env
+
+# Expose the application port
 EXPOSE 3000
 
+# Command to run the application
 CMD [ "/apex_network apex_network_api" ]
 
-# ENTRYPOINT [ "/app/bin"]
-
-# # Set the working directory inside the container
-# WORKDIR /root/
-
-# # Copy the compiled Go binary from the builder stage
-# COPY --from=BUILD_IMAGE /app/main .
-
-# # Expose the port the application will run on
-# EXPOSE 3000
-
-# # Command to run the application
-#  CMD ["make", "app"]
