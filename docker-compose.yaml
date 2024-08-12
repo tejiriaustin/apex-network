@@ -2,8 +2,11 @@ version: "3.8"
 services:
   apexapp:
     build:
-      context: ./Docker-files/app
-    image: apexcontainers/apexapp
+      context: ../..
+      dockerfile: Docker-files/app
+    image: oluty/apexapp
     container_name: apexapp
     ports:
       - "3000:3000"
+    env_file:
+      - ./.env 
