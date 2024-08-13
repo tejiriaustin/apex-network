@@ -4,21 +4,18 @@ FROM golang:1.20-alpine AS build_image
 LABEL "Project"="Apex_Network"
 LABEL "Author"="Tejiri"
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /build
 
 # Copy the Go source code into the container
 COPY src/go.mod .
-COPY src/*.go .
+COPY src/ .
 COPY .env .
 
 # Download go dependencies
 RUN go mod download
 
-# Fetch the missing module (optional but recommended)
-RUN go get github.com/tejiriaustin/apex-network/cmd
-
 # Build the Go application
-RUN go build -o /app/apex_network
+RUN go build -o /build/apex_network
 
 
 
@@ -29,14 +26,11 @@ FROM alpine:latest
 WORKDIR /app
 
 # Copy the built Go binary from the builder stage
-COPY --from=build_image /apex_network /apex_network
-
-# Copy .env file if it's needed
-# COPY .env /app/.env
+COPY --from=build_image /build/apex_network ./apex_network
 
 # Expose the application port
 EXPOSE 3000
 
 # Command to run the application
-CMD [ "/app/apex_network" ]
+CMD [ "./apex_network", "apex_network_api" ]
 
