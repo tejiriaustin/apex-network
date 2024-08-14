@@ -1,0 +1,78 @@
+---
+- name: Provision EC2 Instances for Jenkins and Docker
+  hosts: localhost
+  gather_facts: False
+  vars:
+    key_name: your-ssh-key-name
+    instance_type: t2.micro
+    region: us-west-2
+    ami: ami-0c55b159cbfafe1f0  # Ubuntu 22 AMI (example)
+    security_group: jenkins-docker-sg
+
+  tasks:
+    - name: Install amazon.aws collection
+      ansible.builtin.shell: ansible-galaxy collection install amazon.aws
+      args:
+        warn: false  # Suppresses warnings if the collection is already installed
+
+    - name: Create key pair
+      ec2_key:
+        name: mykey
+      register: keyout
+
+    # - name: print key
+    #   debug:
+    #     var: keyout
+
+    - name: save key
+      copy:
+        content: "{{keyout.key.private_key}}"
+        dest: ./mykey.pem
+      when: keyout.changed
+
+    - name: Install aws modules
+
+    - name: Create a security group
+      ec2_group:
+        name: "{{ security_group }}"
+        description: Jenkins and Docker SG
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            ports:
+              - 22
+              - 8080
+              - 3000
+            cidr_ip: 0.0.0.0/0
+
+
+
+
+    - name: Launch Jenkins EC2 instance
+      ec2:
+        key_name: "{{ key_name }}"
+        instance_type: "{{ instance_type }}"
+        image: "{{ ami }}"
+        region: "{{ region }}"
+        group: "{{ security_group }}"
+        count: 1
+        instance_tags:
+          Name: "Jenkins Server"
+        wait: yes
+        wait_timeout: 500
+      register: ec2
+
+    - name: Add new EC2 instance to the host group
+      add_host:
+        hostname: "{{ item.public_dns_name }}"
+        groupname: jenkins_server
+      with_items: "{{ ec2.instances }}"
+
+    - name: Wait for SSH to come up
+      wait_for:
+        host: "{{ item.public_dns_name }}"
+        port: 22
+        delay: 60
+        timeout: 320
+        state: started
+      with_items: "{{ ec2.instances }}"
