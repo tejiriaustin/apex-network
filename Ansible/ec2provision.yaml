@@ -1,20 +1,19 @@
 ---
-- name: Provision EC2 Instances for Jenkins and Docker
+- name: Ensure amazon.aws collection is installed
   hosts: localhost
-  gather_facts: False
-  vars:
-    key_name: your-ssh-key-name
-    instance_type: t2.micro
-    region: us-west-2
-    ami: ami-0c55b159cbfafe1f0  # Ubuntu 22 AMI (example)
-    security_group: jenkins-docker-sg
-
+  gather_facts: false
   tasks:
     - name: Install amazon.aws collection
       ansible.builtin.shell: ansible-galaxy collection install amazon.aws
       args:
         warn: false  # Suppresses warnings if the collection is already installed
 
+- name: Setup ec2 instance
+  hosts: localhost
+  gather_facts: False
+  # vars:
+
+  tasks:
     - name: Create key pair
       ec2_key:
         name: mykey
@@ -30,7 +29,13 @@
         dest: ./mykey.pem
       when: keyout.changed
 
-    - name: Install aws modules
+    - name: Set file permissions for the private key
+      file:
+        path: ./mykey.pem
+        mode: '0400'  # This sets the file permission to 400
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+      when: keyout.changed
 
     - name: Create a security group
       ec2_group:
@@ -39,25 +44,37 @@
         region: "{{ region }}"
         rules:
           - proto: tcp
-            ports:
-              - 22
-              - 8080
-              - 3000
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 8080
+            to_port: 8080
+            cidr_ip: 10.0.0.0/8
+          - proto: tcp
+            from_port: 3000
+            to_port: 3000
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
             cidr_ip: 0.0.0.0/0
 
-
-
-
-    - name: Launch Jenkins EC2 instance
-      ec2:
+    - name: launch ec2 instance
+      ec2_instance:
+        name: "{{ instance_name }}"
         key_name: "{{ key_name }}"
+        # vpc_subnet_id: subnet-5ca1ab1e
         instance_type: "{{ instance_type }}"
-        image: "{{ ami }}"
+        security_group: "{{ security_group }}"
+        # network:
+        #   assign_public_ip: true
+        image_id: "{{ ami }}"
         region: "{{ region }}"
-        group: "{{ security_group }}"
-        count: 1
+        exact_count: 1
         instance_tags:
-          Name: "Jenkins Server"
+          Name: "{{ instance_name }}"
         wait: yes
         wait_timeout: 500
       register: ec2
@@ -76,3 +93,73 @@
         timeout: 320
         state: started
       with_items: "{{ ec2.instances }}"
+
+---
+- name: provision ec2 instance with Jenkins and Docker
+  hosts: jenkins_server
+  become: yes
+
+  tasks:
+    - name: Update apt and install dependencies
+      apt:
+        update_cache: yes
+        name:
+          - openjdk-11-jdk
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Add Jenkins apt key and source list
+      apt_key:
+        url: https://pkg.jenkins.io/debian/jenkins.io.key
+        state: present
+
+    - name: Add Jenkins repository
+      apt_repository:
+        repo: deb https://pkg.jenkins.io/debian-stable binary/
+        state: present
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Ensure Docker service is started
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ensure Jenkins service is started
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Add Jenkins user to Docker group
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+
+    - name: Restart Jenkins to apply group changes
+      service:
+        name: jenkins
+        state: restarted
