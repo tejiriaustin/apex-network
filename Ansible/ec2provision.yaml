@@ -163,3 +163,17 @@
       service:
         name: jenkins
         state: restarted
+
+  tasks:
+    - name: Pull source code from GitHub
+      git:
+        repo: 'https://github.com/Oluty-1/apex-network_mod.git'
+        dest: /home/jenkins/apex
+
+    - name: Change directory to the project directory
+      ansible.builtin.shell: cd /home/apex
+
+    - name: Run docker-compose up
+      ansible.builtin.shell: docker-compose up -d
+      args:
+        chdir: /home/jenkins/apex  # Set the working directory
