@@ -18,24 +18,45 @@
       ec2_key:
         name: mykey
       register: keyout
+      
+    - name: Generate a new SSH key pair
+      openssh_keypair:
+        path: "/tmp/mykey"
+        type: rsa
+        size: 2048
+        force: yes
+      register: keyout
+
+    - name: Store the private key in AWS Secrets Manager
+      aws_secret:
+        name: "{{ secret_name }}"
+        secret_string: "{{ lookup('file', keyout.private_key.path) }}"
+        region: "{{ region }}"
+      register: secret_data
+
+    - name: Remove local key files for security
+      file:
+        path: "/tmp/mykey"
+        state: absent
 
     # - name: print key
     #   debug:
     #     var: keyout
 
-    - name: save key
-      copy:
-        content: "{{keyout.key.private_key}}"
-        dest: ./mykey.pem
-      when: keyout.changed
+    # - name: save key
+    #   copy:
+    #     content: "{{keyout.key.private_key}}"
+    #     dest: ./mykey.pem
+    #   when: keyout.changed
 
-    - name: Set file permissions for the private key
-      file:
-        path: ./mykey.pem
-        mode: '0400'  # This sets the file permission to 400
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-      when: keyout.changed
+
+    # - name: Set file permissions for the private key
+    #   file:
+    #     path: ./mykey.pem
+    #     mode: '0400'  # This sets the file permission to 400
+    #     owner: "{{ ansible_user }}"
+    #     group: "{{ ansible_user }}"
+    #   when: keyout.changed
 
     - name: Create a security group
       ec2_group:
