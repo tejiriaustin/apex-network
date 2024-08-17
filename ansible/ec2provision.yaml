@@ -189,7 +189,7 @@
     - name: Pull source code from GitHub
       git:
         repo: 'https://github.com/Oluty-1/apex-network_mod.git'
-        dest: /home/jenkins/apex
+        dest: /home/apex
 
     - name: Change directory to the project directory
       ansible.builtin.shell: cd /home/apex
