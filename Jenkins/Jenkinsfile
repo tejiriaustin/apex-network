@@ -8,7 +8,10 @@ pipeline {
         DOCKER_IMAGE = 'oluty/apexapp'
         GIT_REPO = 'https://github.com/Oluty-1/apex-network_mod.git'
         BRANCH = 'main'
+        REGION = 'us-east-2'
         apexRegistry = https://hub.docker.com/repository/docker/oluty/apexapp
+        cluster = "clustername"
+        service = "servicename"
 
     stages {
         stage('Fetch Code') {
@@ -39,6 +42,13 @@ pipeline {
             }
         }
 
+        stage('Deploy to ecs') {
+            steps {
+                withAWS(credentials: 'awscreds', region:$(REGION)) {
+                    sh 'aws ecs update-service --cluster ${cluster} --service ${service} --force-new-deployment'
+                }
+            }
+        }
         stage('Clean up') {
             steps {
                 script {

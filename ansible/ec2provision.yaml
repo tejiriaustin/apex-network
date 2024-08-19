@@ -184,6 +184,11 @@
       service:
         name: jenkins
         state: restarted
+        
+    - name: Install AWS CLI
+      apt:
+        name: awscli
+        state: present
 
   tasks:
     - name: Pull source code from GitHub
