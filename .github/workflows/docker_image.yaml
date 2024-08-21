@@ -18,6 +18,9 @@ env:
   # AWS region
   AWS_REGION: us-east-2
 
+  PORT: ${{ secrets.PORT }}
+  DB_URL: ${{ secrets.DB_URL }}
+
 jobs:
   build:
     name: "Apply source code changes"
