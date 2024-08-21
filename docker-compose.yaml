@@ -11,5 +11,5 @@ services:
     # env_file:
     #   - .env 
     environment:
-      PORT: ${{ secrets.PORT }}
-      DB_URL: ${{ secrets.DB_URL }}
+      PORT: ${PORT}
+      DB_URL: ${DB_URL}
