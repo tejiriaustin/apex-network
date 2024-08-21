@@ -51,3 +51,7 @@ jobs:
         file: Docker-files/app/Dockerfile
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest
+
+    - name: Build and run Docker Compose
+        run: |
+          docker-compose up -d
