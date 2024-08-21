@@ -9,14 +9,14 @@ on:
       - main
 
 env:
-# Credentials for dockerhub
-DOCKER_HUB_USERNAME:
-DOCKER_HUB_ACCESS_TOKEN:
-# Credentials for AWS
-AWS_ACCESS_KEY_ID:
-AWS_SECRET_ACCESS_KEY:
-# AWS region
-AWS_REGION: us-east-2
+  # Credentials for dockerhub
+  DOCKER_HUB_USERNAME:
+  DOCKER_HUB_ACCESS_TOKEN:
+  # Credentials for AWS
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  # AWS region
+  AWS_REGION: us-east-2
 
 jobs:
   build:
