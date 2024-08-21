@@ -50,15 +50,15 @@ jobs:
     - name: Build and tag Docker image
       id: build
       run: |
-        IMAGE_TAG="${{ github.sha }}"
-        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:$IMAGE_TAG -t ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest -f Docker-files/app/Dockerfile .
-        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+        BUILD_NUMBER=${{ github.run_number }}
+        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:$BUILD_NUMBER -t ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest -f Docker-files/app/Dockerfile .
+        echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_ENV
 
     - name: Push Docker image
       run: |
-        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:${{ env.IMAGE_TAG }}
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:${{ env.BUILD_NUMBER }}
         docker push ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest
-#
+
     # - name: Build and push Docker image
     #   uses: docker/build-push-action@v3
     #   with:
