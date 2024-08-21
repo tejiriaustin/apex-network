@@ -17,9 +17,9 @@ env:
   AWS_SECRET_ACCESS_KEY:
   # AWS region
   AWS_REGION: us-east-2
-
-  PORT: ${{ secrets.PORT }}
-  DB_URL: ${{ secrets.DB_URL }}
+  # # Environment variables for Docker Compose
+  # PORT: ${{ secrets.PORT }}
+  # DB_URL: ${{ secrets.DB_URL }}
 
 jobs:
   build:
@@ -55,11 +55,11 @@ jobs:
         push: true
         tags: ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest
 
-    - name: Install Docker Compose
-      run: |
-        sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
+    # - name: Install Docker Compose
+    #   run: |
+    #     sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    #     sudo chmod +x /usr/local/bin/docker-compose
 
-    - name: Build and run Docker Compose
-      run: |
-        docker-compose up -d
+    # - name: Build and run Docker Compose
+    #   run: |
+    #     docker-compose up -d

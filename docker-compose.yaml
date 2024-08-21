@@ -8,8 +8,8 @@ services:
     container_name: apexapp
     ports:
       - "3000:3000"
-    # env_file:
-    #   - .env 
-    environment:
-      PORT: ${PORT}
-      DB_URL: ${DB_URL}
+    env_file:
+      - .env 
+    # environment:
+    #   PORT: ${PORT}
+    #   DB_URL: ${DB_URL}
