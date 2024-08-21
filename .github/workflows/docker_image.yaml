@@ -47,13 +47,25 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v3
-      with:
-        context: .
-        file: Docker-files/app/Dockerfile
-        push: true
-        tags: ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest
+    - name: Build and tag Docker image
+      id: build
+      run: |
+        IMAGE_TAG="${{ github.sha }}"
+        docker build -t ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:$IMAGE_TAG -t ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest -f Docker-files/app/Dockerfile .
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
+    - name: Push Docker image
+      run: |
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:${{ env.IMAGE_TAG }}
+        docker push ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest
+
+    # - name: Build and push Docker image
+    #   uses: docker/build-push-action@v3
+    #   with:
+    #     context: .
+    #     file: Docker-files/app/Dockerfile
+    #     push: true
+    #     tags: ${{ secrets.DOCKER_HUB_USERNAME }}/apexapp:latest
 
     # - name: Install Docker Compose
     #   run: |
