@@ -56,19 +56,6 @@
       debug:
         var: keyout
 
-    # - name: Store the private key in AWS Secrets Manager
-    #   aws_secret:
-    #     name: "{{ secret_name }}"
-    #     secret: "{{ keyout.key.private_key }}"
-    #     region: "{{ region }}"
-    #   register: secret_data
-
-    # - name: Remove local key files for security
-    #   file:
-    #     path: "/tmp/mykey"
-    #     state: absent
-
-
     - name: Save private key to file (optional)
       copy:
         content: "{{ keyout.key.private_key }}"
@@ -125,6 +112,11 @@
         wait_timeout: 500
       register: ec2
 
+    - name: Remove local key files for security
+        file:
+          path: "/tmp/mykey"
+          state: absent
+          
     - name: Add new EC2 instance to the host group
       add_host:
         hostname: "{{ item.public_dns_name }}"  # This uses the public DNS name of the instance
@@ -195,6 +187,12 @@
         name: docker
         state: started
         enabled: yes
+
+    - name: Add Ubuntu user to Docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
 
     # - name: Ensure Jenkins service is started
     #   service:
