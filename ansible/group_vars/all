@@ -1,8 +1,8 @@
-ansible_user: ubuntu
+ansible_user: tayo
 instance_name: Apex
-key_name: mykey.pem
+key_name: mykey
 instance_type: t2.micro
 region: us-east-2
-ami: ami-0e86e20dae9224db8  # Ubuntu 22 AMI (example)
+ami: ami-085f9c64a9b75eed5
 security_group: jenkins-docker-sg
 secret_name: "MyEC2PrivateKey"
