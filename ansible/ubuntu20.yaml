@@ -1,0 +1,205 @@
+---
+- name: Ensure amazon.aws collection is installed
+  hosts: myserver
+  gather_facts: false
+  tasks:
+    - name: Install amazon.aws collection
+      ansible.builtin.shell: ansible-galaxy collection install amazon.aws
+      args:
+        warn: false  # Suppresses warnings if the collection is already installed
+
+- name: Setup ec2 instance
+  hosts: localhost
+  gather_facts: False
+  # vars:
+
+  tasks:
+    - name: Create key pair
+      ec2_key:
+        name: mykey
+      register: keyout
+      
+    - name: Generate a new SSH key pair
+      openssh_keypair:
+        path: "/tmp/mykey"
+        type: rsa
+        size: 2048
+        force: yes
+      register: keyout
+
+    - name: Store the private key in AWS Secrets Manager
+      aws_secret:
+        name: "{{ secret_name }}"
+        secret_string: "{{ lookup('file', keyout.private_key.path) }}"
+        region: "{{ region }}"
+      register: secret_data
+
+    - name: Remove local key files for security
+      file:
+        path: "/tmp/mykey"
+        state: absent
+
+    # - name: print key
+    #   debug:
+    #     var: keyout
+
+    # - name: save key
+    #   copy:
+    #     content: "{{keyout.key.private_key}}"
+    #     dest: ./mykey.pem
+    #   when: keyout.changed
+
+
+    # - name: Set file permissions for the private key
+    #   file:
+    #     path: ./mykey.pem
+    #     mode: '0400'  # This sets the file permission to 400
+    #     owner: "{{ ansible_user }}"
+    #     group: "{{ ansible_user }}"
+    #   when: keyout.changed
+
+    - name: Create a security group
+      ec2_group:
+        name: "{{ security_group }}"
+        description: Jenkins and Docker SG
+        region: "{{ region }}"
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 8080
+            to_port: 8080
+            cidr_ip: 10.0.0.0/8
+          - proto: tcp
+            from_port: 3000
+            to_port: 3000
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+
+    - name: launch ec2 instance
+      ec2_instance:
+        name: "{{ instance_name }}"
+        key_name: "{{ key_name }}"
+        # vpc_subnet_id: subnet-5ca1ab1e
+        instance_type: "{{ instance_type }}"
+        security_group: "{{ security_group }}"
+        # network:
+        #   assign_public_ip: true
+        image_id: "{{ ami }}"
+        region: "{{ region }}"
+        exact_count: 1
+        instance_tags:
+          Name: "{{ instance_name }}"
+        wait: yes
+        wait_timeout: 500
+      register: ec2
+
+    - name: Add new EC2 instance to the host group
+      add_host:
+        hostname: "{{ item.public_dns_name }}"
+        groupname: jenkins_server
+      with_items: "{{ ec2.instances }}"
+
+    - name: Wait for SSH to come up
+      wait_for:
+        host: "{{ item.public_dns_name }}"
+        port: 22
+        delay: 60
+        timeout: 320
+        state: started
+      with_items: "{{ ec2.instances }}"
+
+---
+- name: provision ec2 instance with Jenkins and Docker
+  hosts: jenkins_server
+  become: yes
+
+  tasks:
+    - name: Update apt and install dependencies
+      apt:
+        update_cache: yes
+        name:
+          - openjdk-11-jdk
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: Add Jenkins apt key and source list
+      apt_key:
+        url: https://pkg.jenkins.io/debian/jenkins.io.key
+        state: present
+
+    - name: Add Jenkins repository
+      apt_repository:
+        repo: deb https://pkg.jenkins.io/debian-stable binary/
+        state: present
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Ensure Docker service is started
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Ensure Jenkins service is started
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Add Jenkins user to Docker group
+      user:
+        name: jenkins
+        groups: docker
+        append: yes
+
+    - name: Restart Jenkins to apply group changes
+      service:
+        name: jenkins
+        state: restarted
+        
+    - name: Install AWS CLI
+      apt:
+        name: awscli
+        state: present
+
+  tasks:
+    - name: Pull source code from GitHub
+      git:
+        repo: 'https://github.com/Oluty-1/apex-network_mod.git'
+        dest: /home/apex
+
+    - name: Change directory to the project directory
+      ansible.builtin.shell: cd /home/apex
+
+    - name: Run docker-compose up
+      ansible.builtin.shell: docker-compose up -d
+      args:
+        chdir: /home/jenkins/apex  # Set the working directory

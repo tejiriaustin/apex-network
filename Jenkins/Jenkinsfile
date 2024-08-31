@@ -1,0 +1,72 @@
+// Install plugins on jenkins: "docker pipeline", "dockerhub"
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_CREDENTIALS_ID = 'docker-hub-credentials'  // ID of your Docker Hub credentials in Jenkins
+        DOCKER_IMAGE = 'oluty/apexapp'
+        GIT_REPO = 'https://github.com/Oluty-1/apex-network_mod.git'
+        BRANCH = 'main'
+        REGION = 'us-east-2'
+        apexRegistry = https://hub.docker.com/repository/docker/oluty/apexapp
+        cluster = "clustername"
+        service = "servicename"
+
+    stages {
+        stage('Fetch Code') {
+            steps {
+                // Clone the repository
+                git branch: "${main}", url: "${GIT_REPO}"
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build Docker image
+                    def customImage = docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}", "./Docker-files/app/")
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    // Login to Docker Hub and push the Docker image
+                    docker.withRegistry(DOCKER_REGISTRY, "${DOCKERHUB_CREDENTIALS_ID}") {
+                        customImage.push('latest')
+                        customImage.push("${BUILD_NUMBER}")
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to ecs') {
+            steps {
+                withAWS(credentials: 'awscreds', region:$(REGION)) {
+                    sh 'aws ecs update-service --cluster ${cluster} --service ${service} --force-new-deployment'
+                }
+            }
+        }
+        stage('Clean up') {
+            steps {
+                script {
+                    // Clean up the Docker environment
+                    sh "docker rmi ${DOCKER_IMAGE}:${BUILD_NUMBER}"
+                    sh "docker rmi ${DOCKER_IMAGE}:latest"
+                }
+            }
+    }
+
+    post {
+        always {
+            // Notify in case of failure/success
+            echo 'Pipeline finished!'
+        }
+        cleanup {
+            // Cleanup the workspace
+            deleteDir()
+        }
+    }
+}

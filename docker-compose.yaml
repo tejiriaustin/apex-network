@@ -1,1 +1,15 @@
-
+version: "3.8"
+services:
+  apexapp:
+    build:
+      context: .
+      dockerfile: Docker-files/app/Dockerfile
+    image: oluty/apexapp
+    container_name: apexapp
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env 
+    # environment:
+    #   PORT: ${PORT}
+    #   DB_URL: ${DB_URL}

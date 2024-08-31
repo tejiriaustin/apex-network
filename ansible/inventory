@@ -1,0 +1,9 @@
+all:
+  hosts:
+    myserver:
+      ansible_host: 127.0.0.1
+      ansible_user: tayo
+      ansible_connection: local
+
+    # jenkins_server:
+    #   ansible_user: ubuntu
